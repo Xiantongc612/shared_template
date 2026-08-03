@@ -6,6 +6,13 @@
 {% if 'frontend' in components or 'client' in components or ('backend' in components and 'hono' in backend_variants) %}
 # Bun
 node_modules/
+{% if 'frontend' in components %}
+frontend/dist/
+{% if frontend_playwright %}
+frontend/playwright-report/
+frontend/test-results/
+{% endif %}
+{% endif %}
 {% endif %}
 {% if 'client' in components %}
 # Rust

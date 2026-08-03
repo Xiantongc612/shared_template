@@ -1,0 +1,48 @@
+import { ArrowUpRight, Blocks, ShieldCheck } from "lucide-react";
+{% if frontend_i18next -%}
+import { useTranslation } from "react-i18next";
+{% endif -%}
+import { Button } from "./components/ui/button";
+
+export function App() {
+  {% if frontend_i18next -%}
+  const { t } = useTranslation();
+  const heading = t("heading");
+  {% else -%}
+  const heading = "A deliberate starting point.";
+  {% endif -%}
+
+  return (
+    <main>
+      <nav aria-label="Primary navigation">
+        <span className="wordmark">{{ project_name }}</span>
+        <span className="edition">React / Static</span>
+      </nav>
+
+      <section className="hero">
+        <p className="eyebrow">Independent frontend artifact</p>
+        <h1>{heading}</h1>
+        <p className="lede">
+          React, Tailwind CSS, shadcn/ui, and Bun configured as a focused static
+          application without provider lock-in.
+        </p>
+        <Button size="lg">
+          Start building <ArrowUpRight aria-hidden="true" />
+        </Button>
+      </section>
+
+      <section className="features" aria-label="Foundation">
+        <article>
+          <Blocks aria-hidden="true" />
+          <h2>Composable</h2>
+          <p>Own this frontend without coupling it to another component.</p>
+        </article>
+        <article>
+          <ShieldCheck aria-hidden="true" />
+          <h2>Checked</h2>
+          <p>Biome, TypeScript, and Testing Library are ready from day one.</p>
+        </article>
+      </section>
+    </main>
+  );
+}

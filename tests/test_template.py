@@ -109,7 +109,7 @@ def test_render_matrix(
     project = render(name, answers)
     readme = (project / "README.md").read_text()
 
-    assert {path.name for path in project.iterdir()} == SHARED_FILES
+    assert SHARED_FILES <= {path.name for path in project.iterdir()}
     assert all(text in readme for text in expected)
     assert all(text not in readme for text in unexpected)
 
@@ -137,6 +137,58 @@ def test_default_render_has_only_react_runtime(render: Render) -> None:
     )
     assert "backend_variants" not in answers
     assert "client_playwright" not in answers
+    assert (project / "frontend" / "package.json").is_file()
+
+
+def test_react_integrations_are_independently_rendered(render: Render) -> None:
+    project = render(
+        "ReactAI",
+        {"frontend_ai_sdk": True},
+    )
+    package = json.loads((project / "frontend" / "package.json").read_text())
+
+    assert package["dependencies"]["ai"] == "7.0.48"
+    assert "@tanstack/react-query" not in package["dependencies"]
+    assert "i18next" not in package["dependencies"]
+    assert "@playwright/test" not in package["devDependencies"]
+    assert (project / "frontend" / "src" / "integrations" / "ai.ts").is_file()
+    assert not (project / "frontend" / "playwright.config.ts").exists()
+
+
+def test_react_all_integrations_render_configuration(render: Render) -> None:
+    project = render(
+        "ReactAll",
+        {
+            "frontend_playwright": True,
+            "frontend_ai_sdk": True,
+            "frontend_tanstack_query": True,
+            "frontend_i18next": True,
+        },
+    )
+    frontend = project / "frontend"
+    package = json.loads((frontend / "package.json").read_text())
+
+    assert {
+        "ai",
+        "zod",
+        "@tanstack/react-query",
+        "i18next",
+        "react-i18next",
+    } <= package["dependencies"].keys()
+    assert package["devDependencies"]["@playwright/test"] == "1.62.1"
+    assert (frontend / "playwright.config.ts").is_file()
+    assert (frontend / "e2e" / "app.spec.ts").is_file()
+    assert (frontend / "src" / "integrations" / "ai.ts").is_file()
+    assert (frontend / "src" / "integrations" / "i18n.ts").is_file()
+    assert "QueryClientProvider" in (frontend / "src" / "main.tsx").read_text()
+
+
+def test_react_files_are_absent_without_react_frontend(render: Render) -> None:
+    client = render("ClientOnly", {"components": ["client"]})
+    astro = render("AstroOnly", {"frontend_variant": "astro"})
+
+    assert not (client / "frontend").exists()
+    assert not (astro / "frontend").exists()
 
 
 def test_frontend_and_client_answers_are_independent(render: Render) -> None:
