@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.17.5/.schema/devbox.schema.json",
+  "packages": [
+    "uv@latest",
+    "gitleaks@latest",
+    "pre-commit@latest"
+  ],
+    "shell": {
+    "init_hook": [],
+    "scripts": {
+      "init": [
+        "echo '📌 Preparing python venv'",
+        "uv sync",
+        "echo '📌 Preparing pre-commit hook'",
+        "pre-commit install"
+      ],
+      "check": [
+        "echo '📌 Running gitleaks'",
+        "gitleaks git"
+      ]
+    }
+  }
+}
