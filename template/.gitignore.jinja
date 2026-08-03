@@ -1,0 +1,22 @@
+# Devbox
+.devbox/
+
+# Local environment
+.env
+{% if 'frontend' in components or 'client' in components or ('backend' in components and 'hono' in backend_variants) %}
+# Bun
+node_modules/
+{% endif %}
+{% if 'client' in components %}
+# Rust
+target/
+{% endif %}
+{% if 'backend' in components and 'fastapi' in backend_variants %}
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.ty_cache/
+{% endif %}

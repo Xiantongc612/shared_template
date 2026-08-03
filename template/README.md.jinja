@@ -1,0 +1,69 @@
+# {{ project_name }}
+
+Generated from the `shared_template` Copier template.
+
+## Components
+
+{% if 'frontend' in components -%}
+- Frontend: {{ frontend_variant | capitalize }}
+  - Artifact: {{ frontend_artifact }}
+{% endif -%}
+{% if 'client' in components -%}
+- Client: Tauri desktop application
+  - Artifact: {{ client_artifact }}
+{% endif -%}
+{% if 'backend' in components and 'hono' in backend_variants -%}
+- Backend: Hono
+  - Artifact: {{ hono_artifact }}
+{% endif -%}
+{% if 'backend' in components and 'fastapi' in backend_variants -%}
+- Backend: FastAPI
+  - Artifact: {{ fastapi_artifact }}
+{% endif %}
+
+## Optional integrations
+
+{% set ns = namespace(any=false) -%}
+{% if 'frontend' in components and frontend_playwright -%}
+{% set ns.any = true -%}
+- Frontend: Playwright
+{% endif -%}
+{% if 'frontend' in components and frontend_ai_sdk -%}
+{% set ns.any = true -%}
+- Frontend: AI SDK
+{% endif -%}
+{% if 'frontend' in components and frontend_variant == 'react' and frontend_tanstack_query -%}
+{% set ns.any = true -%}
+- Frontend: TanStack Query
+{% endif -%}
+{% if 'frontend' in components and frontend_i18next -%}
+{% set ns.any = true -%}
+- Frontend: i18next
+{% endif -%}
+{% if 'client' in components and client_playwright -%}
+{% set ns.any = true -%}
+- Client: Playwright
+{% endif -%}
+{% if 'client' in components and client_ai_sdk -%}
+{% set ns.any = true -%}
+- Client: AI SDK
+{% endif -%}
+{% if 'client' in components and client_tanstack_query -%}
+{% set ns.any = true -%}
+- Client: TanStack Query
+{% endif -%}
+{% if 'client' in components and client_i18next -%}
+{% set ns.any = true -%}
+- Client: i18next
+{% endif -%}
+{% if 'backend' in components and 'hono' in backend_variants and hono_ai_sdk -%}
+{% set ns.any = true -%}
+- Hono: AI SDK
+{% endif -%}
+{% if 'backend' in components and 'fastapi' in backend_variants and fastapi_pydantic_ai -%}
+{% set ns.any = true -%}
+- FastAPI: PydanticAI
+{% endif -%}
+{% if not ns.any -%}
+None.
+{% endif %}
