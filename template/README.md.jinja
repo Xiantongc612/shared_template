@@ -20,6 +20,22 @@ Generated from the `shared_template` Copier template.
 - Backend: FastAPI
   - Artifact: {{ fastapi_artifact }}
 {% endif %}
+{% if 'backend' in components and 'fastapi' in backend_variants %}
+## FastAPI backend
+
+The independent Python service is in `backend/fastapi/`.
+
+```sh
+uv sync --project backend/fastapi
+uv run --project backend/fastapi ruff check backend/fastapi
+uv run --project backend/fastapi ruff format --check backend/fastapi
+uv run --project backend/fastapi ty check backend/fastapi/app
+uv run --project backend/fastapi pytest backend/fastapi
+docker build backend/fastapi
+```
+
+The Docker build creates a local OCI-compatible image and does not publish it.
+{% endif %}
 {% if 'backend' in components and 'hono' in backend_variants %}
 ## Hono backend
 

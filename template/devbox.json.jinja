@@ -15,7 +15,8 @@
         "pre-commit install"{% if 'frontend' in components %},
         "bun install --cwd frontend"{% endif %}{% if 'client' in components %},
         "bun install --cwd client"{% endif %}{% if 'backend' in components and 'hono' in backend_variants %},
-        "bun install --cwd backend/hono"{% endif %}
+        "bun install --cwd backend/hono"{% endif %}{% if 'backend' in components and 'fastapi' in backend_variants %},
+        "uv sync --project backend/fastapi"{% endif %}
       ],
       "check": [
         "gitleaks git"{% if 'frontend' in components %},
@@ -28,7 +29,11 @@
         "bun run --cwd client build"{% endif %}{% if 'backend' in components and 'hono' in backend_variants %},
         "bun run --cwd backend/hono check",
         "bun test --cwd backend/hono",
-        "bun run --cwd backend/hono build"{% endif %}
+        "bun run --cwd backend/hono build"{% endif %}{% if 'backend' in components and 'fastapi' in backend_variants %},
+        "uv run --project backend/fastapi ruff check backend/fastapi",
+        "uv run --project backend/fastapi ruff format --check backend/fastapi",
+        "uv run --project backend/fastapi ty check backend/fastapi/app",
+        "uv run --project backend/fastapi pytest backend/fastapi"{% endif %}
       ]
     }
   }

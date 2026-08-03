@@ -256,6 +256,25 @@ def test_hono_generator_and_optional_ai(render: Render) -> None:
     assert not (project / "backend" / "fastapi").exists()
 
 
+def test_fastapi_generator_and_optional_ai(render: Render) -> None:
+    project = render(
+        "FastAPIAI",
+        {
+            "components": ["backend"],
+            "backend_variants": ["fastapi"],
+            "fastapi_pydantic_ai": True,
+        },
+    )
+    service = project / "backend" / "fastapi"
+    pyproject = (service / "pyproject.toml").read_text()
+
+    assert "fastapi==0.141.1" in pyproject
+    assert "pydantic-ai==2.22.0" in pyproject
+    assert (service / "Dockerfile").is_file()
+    assert (service / "app" / "ai.py").is_file()
+    assert not (project / "backend" / "hono").exists()
+
+
 def test_frontend_and_client_answers_are_independent(render: Render) -> None:
     project = render(
         "Independent",
