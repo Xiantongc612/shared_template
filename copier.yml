@@ -1,0 +1,135 @@
+---
+_min_copier_version: "9.17.0"
+_subdirectory: template
+_exclude:
+  - .gitkeep
+
+project_name:
+  type: str
+  help: Name of the generated project.
+  validator: >-
+    {% if not project_name | trim %}
+    Project name must not be empty.
+    {% endif %}
+
+components:
+  type: str
+  help: Select at least one independently generated component.
+  choices:
+    Frontend: frontend
+    Client: client
+    Backend: backend
+  multiselect: true
+  default:
+    - frontend
+  validator: >-
+    {% if not components %}
+    Select at least one of Frontend, Client, or Backend.
+    {% endif %}
+
+frontend_variant:
+  type: str
+  help: Select the frontend implementation.
+  choices:
+    React: react
+    Astro: astro
+  default: react
+  when: "{{ 'frontend' in components }}"
+
+backend_variants:
+  type: str
+  help: Select at least one backend implementation.
+  choices:
+    Hono: hono
+    FastAPI: fastapi
+  multiselect: true
+  default: []
+  when: "{{ 'backend' in components }}"
+  validator: >-
+    {% if not backend_variants %}
+    Select at least one of Hono or FastAPI when Backend is selected.
+    {% endif %}
+
+frontend_playwright:
+  type: bool
+  help: Add Playwright end-to-end testing to the frontend.
+  default: false
+  when: "{{ 'frontend' in components }}"
+
+frontend_ai_sdk:
+  type: bool
+  help: Add the AI SDK to the frontend.
+  default: false
+  when: "{{ 'frontend' in components }}"
+
+frontend_tanstack_query:
+  type: bool
+  help: Add TanStack Query to the React frontend.
+  default: false
+  when: "{{ 'frontend' in components and frontend_variant == 'react' }}"
+
+frontend_i18next:
+  type: bool
+  help: Add i18next internationalization to the frontend.
+  default: false
+  when: "{{ 'frontend' in components }}"
+
+client_playwright:
+  type: bool
+  help: Add Playwright end-to-end testing to the desktop client.
+  default: false
+  when: "{{ 'client' in components }}"
+
+client_ai_sdk:
+  type: bool
+  help: Add the AI SDK to the desktop client.
+  default: false
+  when: "{{ 'client' in components }}"
+
+client_tanstack_query:
+  type: bool
+  help: Add TanStack Query to the desktop client.
+  default: false
+  when: "{{ 'client' in components }}"
+
+client_i18next:
+  type: bool
+  help: Add i18next internationalization to the desktop client.
+  default: false
+  when: "{{ 'client' in components }}"
+
+hono_ai_sdk:
+  type: bool
+  help: Add the AI SDK to the Hono service.
+  default: false
+  when: "{{ 'backend' in components and 'hono' in backend_variants }}"
+
+fastapi_pydantic_ai:
+  type: bool
+  help: Add PydanticAI to the FastAPI service.
+  default: false
+  when: "{{ 'backend' in components and 'fastapi' in backend_variants }}"
+
+frontend_artifact:
+  type: str
+  default: >-
+    {% if 'frontend' in components %}Provider-neutral static site{% endif %}
+  when: false
+
+client_artifact:
+  type: str
+  default: >-
+    {% if 'client' in components %}Tauri desktop application bundle{% endif %}
+  when: false
+
+hono_artifact:
+  type: str
+  default: >-
+    {% if 'backend' in components and 'hono' in backend_variants %}Cloudflare edge function{% endif %}
+  when: false
+
+fastapi_artifact:
+  type: str
+  default: >-
+    {% if 'backend' in components and 'fastapi' in backend_variants %}OCI-compatible container{% endif %}
+  when: false
