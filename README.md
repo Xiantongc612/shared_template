@@ -4,7 +4,10 @@ An opinionated [Copier](https://copier.readthedocs.io/) template for composing a
 
 ## Local development
 
-This repository uses Devbox to manage development runtimes and utilities. Run `devbox run init` to bootstrap the environment, and use `devbox add` to add repository-level tools.
+This repository uses Devbox to manage development runtimes and utilities. Install
+[Git](https://git-scm.com/) and [Devbox](https://www.jetify.com/devbox/docs/installing_devbox/),
+then run `devbox run init` to create the Python environment and install the
+pre-commit hook. Run `devbox run check` for the complete repository validation.
 
 ## Component selection rules
 

@@ -1,2 +1,1 @@
-def main() -> None:
-    print("Hello from shared-template!")
+"""Helpers for developing and testing the shared application template."""

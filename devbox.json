@@ -5,18 +5,19 @@
     "gitleaks@latest",
     "pre-commit@latest"
   ],
-    "shell": {
+  "shell": {
     "init_hook": [],
     "scripts": {
       "init": [
-        "echo '📌 Preparing python venv'",
-        "uv sync",
-        "echo '📌 Preparing pre-commit hook'",
+        "uv sync --locked",
         "pre-commit install"
       ],
       "check": [
-        "echo '📌 Running gitleaks'",
-        "gitleaks git"
+        "gitleaks git",
+        "uv run ruff check .",
+        "uv run ruff format --check .",
+        "uv run ty check",
+        "uv run pytest"
       ]
     }
   }
