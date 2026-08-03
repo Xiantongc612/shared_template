@@ -1,0 +1,17 @@
+import i18next from "i18next";
+
+void i18next.init({
+  lng: "en",
+  fallbackLng: "en",
+  resources: {
+    en: {
+      translation: {
+        heading: "Content with a clear point of view.",
+      },
+    },
+  },
+});
+
+export function translate(key: string): string {
+  return i18next.t(key);
+}

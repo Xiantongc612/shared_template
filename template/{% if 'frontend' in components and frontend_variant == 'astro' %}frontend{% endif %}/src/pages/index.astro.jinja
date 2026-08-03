@@ -1,0 +1,108 @@
+---
+import { siteName } from "../site";
+{% if frontend_i18next -%}
+import { translate } from "../integrations/i18n";
+
+const heading = translate("heading");
+{% else -%}
+const heading = "Content with a clear point of view.";
+{% endif -%}
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{siteName}</title>
+  </head>
+  <body>
+    <main>
+      <header>
+        <span class="wordmark">{siteName}</span>
+        <span class="edition">Astro / Static</span>
+      </header>
+      <section>
+        <p class="eyebrow">Independent frontend artifact</p>
+        <h1>{heading}</h1>
+        <p class="lede">
+          A content-first Astro foundation that builds to portable static files
+          without a server adapter or provider-specific configuration.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>
+
+<style>
+  :global(*) {
+    box-sizing: border-box;
+  }
+
+  :global(body) {
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0;
+    color: #1d2527;
+    background:
+      linear-gradient(90deg, rgb(29 37 39 / 8%) 1px, transparent 1px) 0 0 / 4rem 4rem,
+      #e8edf0;
+    font-family: Arial, sans-serif;
+  }
+
+  main {
+    width: min(1080px, calc(100% - 2rem));
+    margin: 0 auto;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    padding: 2rem 0;
+    border-bottom: 1px solid rgb(29 37 39 / 30%);
+  }
+
+  .wordmark {
+    font-family: Georgia, serif;
+    font-weight: 700;
+  }
+
+  .edition,
+  .eyebrow {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  section {
+    max-width: 900px;
+    padding: clamp(6rem, 16vw, 13rem) 0;
+  }
+
+  .eyebrow {
+    color: #146b73;
+  }
+
+  h1 {
+    margin: 1rem 0 2rem;
+    font-family: Georgia, serif;
+    font-size: clamp(3.5rem, 10vw, 8rem);
+    font-weight: 500;
+    letter-spacing: -0.065em;
+    line-height: 0.9;
+  }
+
+  .lede {
+    max-width: 640px;
+    font-size: clamp(1rem, 2vw, 1.3rem);
+    line-height: 1.7;
+  }
+
+  @media (max-width: 560px) {
+    .edition {
+      display: none;
+    }
+  }
+</style>

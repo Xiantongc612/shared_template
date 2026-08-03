@@ -20,6 +20,24 @@ Generated from the `shared_template` Copier template.
 - Backend: FastAPI
   - Artifact: {{ fastapi_artifact }}
 {% endif %}
+{% if 'frontend' in components and frontend_variant == 'astro' %}
+## Astro frontend
+
+The independent Astro site is in `frontend/`.
+
+```sh
+bun install --cwd frontend
+bun run --cwd frontend dev
+bun run --cwd frontend check
+bun run --cwd frontend build
+```
+
+The production artifact is the provider-neutral `frontend/dist/` directory.
+{% if frontend_playwright %}
+Install a Playwright browser with `bunx --cwd frontend playwright install chromium`,
+then run the end-to-end suite with `bun run --cwd frontend test:e2e`.
+{% endif %}
+{% endif %}
 
 ## Optional integrations
 

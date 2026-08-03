@@ -1,0 +1,25 @@
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro check && astro build",
+    "check": "biome check astro.config.mjs src/site.ts && astro check",
+    "format": "biome format --write astro.config.mjs src/site.ts"{% if frontend_playwright %},
+    "test:e2e": "playwright test"{% endif %}
+  },
+  "dependencies": {
+    "astro": "7.1.6"{% if frontend_ai_sdk %},
+    "ai": "7.0.48",
+    "zod": "4.3.6"{% endif %}{% if frontend_i18next %},
+    "i18next": "26.3.6"{% endif %}
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@biomejs/biome": "2.5.6",
+    "typescript": "6.0.3"{% if frontend_playwright %},
+    "@playwright/test": "1.62.1"{% endif %}
+  }
+}

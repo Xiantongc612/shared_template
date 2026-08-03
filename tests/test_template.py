@@ -183,12 +183,35 @@ def test_react_all_integrations_render_configuration(render: Render) -> None:
     assert "QueryClientProvider" in (frontend / "src" / "main.tsx").read_text()
 
 
-def test_react_files_are_absent_without_react_frontend(render: Render) -> None:
+def test_react_files_are_absent_without_react_variant(render: Render) -> None:
     client = render("ClientOnly", {"components": ["client"]})
     astro = render("AstroOnly", {"frontend_variant": "astro"})
 
     assert not (client / "frontend").exists()
-    assert not (astro / "frontend").exists()
+    assert not (astro / "frontend" / "src" / "App.tsx").exists()
+
+
+def test_astro_generator_is_independent(render: Render) -> None:
+    project = render(
+        "AstroAll",
+        {
+            "frontend_variant": "astro",
+            "frontend_playwright": True,
+            "frontend_ai_sdk": True,
+            "frontend_i18next": True,
+        },
+    )
+    frontend = project / "frontend"
+    package = json.loads((frontend / "package.json").read_text())
+
+    assert package["dependencies"]["astro"] == "7.1.6"
+    assert package["dependencies"]["ai"] == "7.0.48"
+    assert package["dependencies"]["i18next"] == "26.3.6"
+    assert "react" not in package["dependencies"]
+    assert "@tanstack/react-query" not in package["dependencies"]
+    assert (frontend / "src" / "pages" / "index.astro").is_file()
+    assert not (frontend / "src" / "App.tsx").exists()
+    assert (frontend / "playwright.config.ts").is_file()
 
 
 def test_frontend_and_client_answers_are_independent(render: Render) -> None:

@@ -12,14 +12,15 @@
   "shell": {
     "scripts": {
       "init": [
-        "pre-commit install"{% if 'frontend' in components and frontend_variant == 'react' %},
+        "pre-commit install"{% if 'frontend' in components %},
         "bun install --cwd frontend"{% endif %}
       ],
       "check": [
-        "gitleaks git"{% if 'frontend' in components and frontend_variant == 'react' %},
-        "bun run --cwd frontend check",
+        "gitleaks git"{% if 'frontend' in components %},
+        "bun run --cwd frontend check"{% if frontend_variant == 'react' %},
         "bun test --cwd frontend",
-        "bun run --cwd frontend build"{% endif %}
+        "bun run --cwd frontend build"{% else %},
+        "bun run --cwd frontend build"{% endif %}{% endif %}
       ]
     }
   }
