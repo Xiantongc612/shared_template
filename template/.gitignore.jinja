@@ -13,6 +13,10 @@ frontend/playwright-report/
 frontend/test-results/
 {% endif %}
 {% endif %}
+{% if 'backend' in components and 'hono' in backend_variants %}
+backend/hono/dist/
+backend/hono/.wrangler/
+{% endif %}
 {% endif %}
 {% if 'client' in components %}
 # Rust

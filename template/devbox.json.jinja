@@ -14,7 +14,8 @@
       "init": [
         "pre-commit install"{% if 'frontend' in components %},
         "bun install --cwd frontend"{% endif %}{% if 'client' in components %},
-        "bun install --cwd client"{% endif %}
+        "bun install --cwd client"{% endif %}{% if 'backend' in components and 'hono' in backend_variants %},
+        "bun install --cwd backend/hono"{% endif %}
       ],
       "check": [
         "gitleaks git"{% if 'frontend' in components %},
@@ -24,7 +25,10 @@
         "bun run --cwd frontend build"{% endif %}{% endif %}{% if 'client' in components %},
         "bun run --cwd client check",
         "bun test --cwd client",
-        "bun run --cwd client build"{% endif %}
+        "bun run --cwd client build"{% endif %}{% if 'backend' in components and 'hono' in backend_variants %},
+        "bun run --cwd backend/hono check",
+        "bun test --cwd backend/hono",
+        "bun run --cwd backend/hono build"{% endif %}
       ]
     }
   }

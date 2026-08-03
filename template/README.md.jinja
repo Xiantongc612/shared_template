@@ -20,6 +20,21 @@ Generated from the `shared_template` Copier template.
 - Backend: FastAPI
   - Artifact: {{ fastapi_artifact }}
 {% endif %}
+{% if 'backend' in components and 'hono' in backend_variants %}
+## Hono backend
+
+The independent Cloudflare Worker service is in `backend/hono/`.
+
+```sh
+bun install --cwd backend/hono
+bun run --cwd backend/hono check
+bun test --cwd backend/hono
+bun run --cwd backend/hono build
+```
+
+The build command uses Wrangler's local `--dry-run` mode and writes the edge
+artifact to `backend/hono/dist/`; it does not deploy remote resources.
+{% endif %}
 {% if 'client' in components %}
 ## Desktop client
 

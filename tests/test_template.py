@@ -237,6 +237,25 @@ def test_client_generator_is_independent(render: Render) -> None:
     assert not (project / "frontend").exists()
 
 
+def test_hono_generator_and_optional_ai(render: Render) -> None:
+    project = render(
+        "HonoAI",
+        {
+            "components": ["backend"],
+            "backend_variants": ["hono"],
+            "hono_ai_sdk": True,
+        },
+    )
+    service = project / "backend" / "hono"
+    package = json.loads((service / "package.json").read_text())
+
+    assert package["dependencies"]["hono"] == "4.12.34"
+    assert package["dependencies"]["ai"] == "7.0.48"
+    assert (service / "wrangler.jsonc").is_file()
+    assert (service / "src" / "ai.ts").is_file()
+    assert not (project / "backend" / "fastapi").exists()
+
+
 def test_frontend_and_client_answers_are_independent(render: Render) -> None:
     project = render(
         "Independent",
