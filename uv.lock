@@ -339,6 +339,7 @@ source = { editable = "." }
 dev = [
     { name = "copier" },
     { name = "pytest" },
+    { name = "pyyaml" },
     { name = "ruff" },
     { name = "ty" },
 ]
@@ -349,6 +350,7 @@ dev = [
 dev = [
     { name = "copier", specifier = ">=9.17.0" },
     { name = "pytest", specifier = ">=9.1.1" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "ruff", specifier = ">=0.16.1" },
     { name = "ty", specifier = ">=0.0.65" },
 ]
