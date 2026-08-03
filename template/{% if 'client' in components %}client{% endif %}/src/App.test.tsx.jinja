@@ -1,0 +1,15 @@
+import { afterEach, describe, expect, test } from "bun:test";
+import { cleanup, render, screen } from "@testing-library/react";
+{% if client_i18next -%}
+import "./integrations/i18n";
+{% endif -%}
+import { App } from "./App";
+
+afterEach(cleanup);
+
+describe("App", () => {
+  test("renders the desktop workspace", () => {
+    render(<App />);
+    expect(screen.getByRole("heading", { level: 1 })).toBeDefined();
+  });
+});

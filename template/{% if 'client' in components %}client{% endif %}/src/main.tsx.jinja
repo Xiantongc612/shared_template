@@ -1,0 +1,29 @@
+{% if client_tanstack_query -%}
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+{% endif -%}
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+{% if client_i18next -%}
+import "./integrations/i18n";
+{% endif -%}
+import { App } from "./App";
+import "./styles.css";
+
+{% if client_tanstack_query -%}
+const queryClient = new QueryClient();
+
+{% endif -%}
+const root = document.getElementById("root");
+if (!root) throw new Error("Root element not found");
+
+createRoot(root).render(
+  <StrictMode>
+{%- if client_tanstack_query %}
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
+{%- else %}
+    <App />
+{%- endif %}
+  </StrictMode>,
+);

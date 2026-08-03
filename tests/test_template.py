@@ -214,6 +214,29 @@ def test_astro_generator_is_independent(render: Render) -> None:
     assert (frontend / "playwright.config.ts").is_file()
 
 
+def test_client_generator_is_independent(render: Render) -> None:
+    project = render(
+        "ClientAll",
+        {
+            "components": ["client"],
+            "client_playwright": True,
+            "client_ai_sdk": True,
+            "client_tanstack_query": True,
+            "client_i18next": True,
+        },
+    )
+    client = project / "client"
+    package = json.loads((client / "package.json").read_text())
+
+    assert package["dependencies"]["@tauri-apps/api"] == "2.11.1"
+    assert "ai" in package["dependencies"]
+    assert "@tanstack/react-query" in package["dependencies"]
+    assert "i18next" in package["dependencies"]
+    assert (client / "src-tauri" / "tauri.conf.json").is_file()
+    assert (client / "src-tauri" / "src" / "lib.rs").is_file()
+    assert not (project / "frontend").exists()
+
+
 def test_frontend_and_client_answers_are_independent(render: Render) -> None:
     project = render(
         "Independent",
@@ -363,7 +386,14 @@ def _git(path: Path, *arguments: str) -> None:
         "GIT_COMMITTER_EMAIL": "template-tests@example.invalid",
     }
     result = subprocess.run(
-        ["git", *arguments],
+        [
+            "git",
+            "-c",
+            "commit.gpgsign=false",
+            "-c",
+            "tag.gpgSign=false",
+            *arguments,
+        ],
         cwd=path,
         env=environment,
         check=False,

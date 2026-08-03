@@ -1,0 +1,21 @@
+{% if client_i18next -%}
+import { useTranslation } from "react-i18next";
+{% endif -%}
+
+export function App() {
+  {% if client_i18next -%}
+  const { t } = useTranslation();
+  const heading = t("heading");
+  {% else -%}
+  const heading = "A focused desktop workspace.";
+  {% endif -%}
+
+  return (
+    <main>
+      <p className="eyebrow">Tauri desktop client</p>
+      <h1>{heading}</h1>
+      <p>React and Rust, packaged as an independent native application.</p>
+      <button type="button">Open workspace</button>
+    </main>
+  );
+}

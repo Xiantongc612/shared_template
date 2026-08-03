@@ -20,6 +20,26 @@ Generated from the `shared_template` Copier template.
 - Backend: FastAPI
   - Artifact: {{ fastapi_artifact }}
 {% endif %}
+{% if 'client' in components %}
+## Desktop client
+
+The independent Tauri application is in `client/`.
+
+```sh
+bun install --cwd client
+bun run --cwd client check
+bun test --cwd client
+bun run --cwd client build
+bun run --cwd client tauri build
+```
+
+The final command requires the platform-specific prerequisites documented by
+Tauri and emits desktop bundles below `client/src-tauri/target/release/bundle/`.
+{% if client_playwright %}
+Install Chromium with `bunx --cwd client playwright install chromium`, then run
+`bun run --cwd client test:e2e`.
+{% endif %}
+{% endif %}
 {% if 'frontend' in components and frontend_variant == 'astro' %}
 ## Astro frontend
 

@@ -17,6 +17,11 @@ frontend/test-results/
 {% if 'client' in components %}
 # Rust
 target/
+client/dist/
+{% if client_playwright %}
+client/playwright-report/
+client/test-results/
+{% endif %}
 {% endif %}
 {% if 'backend' in components and 'fastapi' in backend_variants %}
 # Python
