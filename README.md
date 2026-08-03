@@ -8,6 +8,8 @@ This repository uses Devbox to manage development runtimes and utilities. Instal
 [Git](https://git-scm.com/) and [Devbox](https://www.jetify.com/devbox/docs/installing_devbox/),
 then run `devbox run init` to create the Python environment and install the
 pre-commit hook. Run `devbox run check` for the complete repository validation.
+Dependency updates, Copier compatibility, and release policy are documented in
+[`docs/maintenance.md`](docs/maintenance.md).
 
 ## Component selection rules
 

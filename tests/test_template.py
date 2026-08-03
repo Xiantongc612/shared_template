@@ -120,9 +120,9 @@ def test_default_render_has_only_react_runtime(render: Render) -> None:
     answers = yaml.safe_load((project / ".copier-answers.yml").read_text())
 
     assert devbox["packages"] == [
-        "gitleaks@latest",
-        "pre-commit@latest",
-        "bun@latest",
+        "gitleaks@8.30.1",
+        "pre-commit@4.5.1",
+        "bun@1.3.13",
     ]
     assert answers["components"] == ["frontend"]
     assert answers["frontend_variant"] == "react"
@@ -275,6 +275,39 @@ def test_fastapi_generator_and_optional_ai(render: Render) -> None:
     assert not (project / "backend" / "hono").exists()
 
 
+def test_all_components_have_independent_boundaries(render: Render) -> None:
+    project = render(
+        "FullStack",
+        {
+            "components": ["frontend", "client", "backend"],
+            "backend_variants": ["hono", "fastapi"],
+        },
+    )
+
+    assert (project / "frontend" / "package.json").is_file()
+    assert (project / "client" / "package.json").is_file()
+    assert (project / "client" / "src-tauri" / "Cargo.toml").is_file()
+    assert (project / "backend" / "hono" / "package.json").is_file()
+    assert (project / "backend" / "fastapi" / "pyproject.toml").is_file()
+    assert not (project / "docker-compose.yml").exists()
+    assert not (project / "packages").exists()
+
+
+def test_both_backends_do_not_share_manifests(render: Render) -> None:
+    project = render(
+        "Backends",
+        {
+            "components": ["backend"],
+            "backend_variants": ["hono", "fastapi"],
+        },
+    )
+
+    assert (project / "backend" / "hono" / "package.json").is_file()
+    assert not (project / "backend" / "hono" / "pyproject.toml").exists()
+    assert (project / "backend" / "fastapi" / "pyproject.toml").is_file()
+    assert not (project / "backend" / "fastapi" / "package.json").exists()
+
+
 def test_frontend_and_client_answers_are_independent(render: Render) -> None:
     project = render(
         "Independent",
@@ -305,7 +338,7 @@ def test_unselected_runtimes_leave_no_residue(render: Render) -> None:
     )
 
     assert "python@3.14" in devbox
-    assert "uv@latest" in devbox
+    assert "uv@0.12.1" in devbox
     assert "bun" not in all_text
     assert "cargo" not in all_text
     assert "rustc" not in all_text

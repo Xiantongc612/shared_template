@@ -1,13 +1,13 @@
 {
   "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.17.5/.schema/devbox.schema.json",
   "packages": [
-    "gitleaks@latest",
-    "pre-commit@latest"{% if 'frontend' in components or 'client' in components or ('backend' in components and 'hono' in backend_variants) %},
-    "bun@latest"{% endif %}{% if 'client' in components %},
-    "cargo@latest",
-    "rustc@latest"{% endif %}{% if 'backend' in components and 'fastapi' in backend_variants %},
+    "gitleaks@8.30.1",
+    "pre-commit@4.5.1"{% if 'frontend' in components or 'client' in components or ('backend' in components and 'hono' in backend_variants) %},
+    "bun@1.3.13"{% endif %}{% if 'client' in components %},
+    "cargo@1.97.1",
+    "rustc@1.97.1"{% endif %}{% if 'backend' in components and 'fastapi' in backend_variants %},
     "python@3.14",
-    "uv@latest"{% endif %}
+    "uv@0.12.1"{% endif %}
   ],
   "shell": {
     "scripts": {
