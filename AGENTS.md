@@ -2,10 +2,10 @@
 
 ## Scope and source of truth
 
-- Read `README.md` for the intended component model and `PLAN.md` for implementation order before making architectural changes.
+- Read `README.md` for the implemented component model and `PLAN.md` for current constraints and deferred design decisions before making architectural changes.
 - Keep components independent. Do not invent a universal generated layout, shared UI package, Docker Compose setup, or service orchestration without an explicit design decision.
 - Treat frontend, client, Hono, and FastAPI as separate generators with component-specific outputs.
-- Do not implement later plan phases incidentally while working on an earlier phase.
+- Do not implement deferred capabilities without an explicit design decision.
 
 ## Working method
 

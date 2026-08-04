@@ -21,7 +21,9 @@ Dependency updates, Copier compatibility, and release policy are documented in
 - Optional integrations are opt-in unless a component lists them as part of its core stack.
 - Each component has a fixed artifact type; artifact targets are not questionnaire options.
 
-This document does not prescribe a generated directory layout, cross-component UI sharing, Docker Compose configuration, or service orchestration. Those decisions remain component-specific implementation work.
+This template does not generate cross-component UI sharing, Docker Compose
+configuration, or service orchestration. Those capabilities require separate
+design decisions documented in `PLAN.md`.
 
 ## Shared tooling
 
@@ -46,7 +48,7 @@ The frontend produces provider-neutral static-site artifacts.
 
 ### Astro variant
 
-- Astro for a content-oriented site with static generation and optional server-side rendering
+- Astro for a content-oriented static site
 - Bun as package manager and runtime
 - TypeScript
 - Biome for linting and formatting
@@ -60,7 +62,10 @@ The frontend produces provider-neutral static-site artifacts.
 
 ## Client
 
-The client produces Tauri desktop and/or mobile application bundles. It uses an independent React frontend with the same core frontend technologies where applicable.
+The client produces Tauri desktop application bundles. Generated GitHub automation
+builds Linux AppImage and Debian artifacts; macOS, Windows, and mobile targets are
+deferred. It uses an independent React frontend with the same core frontend
+technologies where applicable.
 
 Optional client integrations are selected independently from frontend integrations.
 
