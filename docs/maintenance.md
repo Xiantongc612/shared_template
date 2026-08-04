@@ -40,7 +40,11 @@ Template releases use semantic versioning:
 - Minor: backward-compatible questions, integrations, and generated files.
 - Major: questionnaire answer incompatibility, moved artifact boundaries, or removed generated behavior.
 
-Release tags must be PEP 440-compatible so Copier can order template versions.
-Every release must pass CI from a clean checkout. Native Tauri bundles are
-validated on each supported desktop operating system; OCI and Cloudflare
-artifacts are built locally without publication or deployment.
+Template release tags must be PEP 440-compatible so Copier can order template
+versions. Every template release must pass CI from a clean checkout.
+
+Generated projects include separate check, test, build, and GitHub Release
+workflows. Their release workflow publishes selected artifacts to a GitHub
+Release from a `v*` tag. Tauri automation produces Linux AppImage and Debian
+bundles only because macOS and Windows artifacts require native runners. OCI and
+Cloudflare artifacts are built locally without registry publication or deployment.

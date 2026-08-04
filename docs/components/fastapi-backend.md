@@ -5,8 +5,9 @@
 - Path: `backend/fastapi/`
 - Production artifact: OCI-compatible container image built from `backend/fastapi/Dockerfile`
 - Development command: `uv run --project backend/fastapi uvicorn app.main:app --reload`
-- Validation commands: Ruff, ty, and pytest through the component's uv environment
-- Artifact command: `docker build backend/fastapi`
+- Formatting command: Ruff through the component's uv environment
+- Validation commands: Ruff and ty, with pytest run separately
+- Artifact command: `docker buildx build --output type=oci,dest=backend/fastapi/dist/fastapi-backend.tar backend/fastapi`
 
 ## Local architecture
 

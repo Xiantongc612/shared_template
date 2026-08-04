@@ -5,7 +5,9 @@
 - Path: `frontend/`
 - Production artifact: provider-neutral static files in `frontend/dist/`
 - Development command: `bun run --cwd frontend dev`
-- Validation commands: `bun run --cwd frontend check`, `bun test --cwd frontend`, and `bun run --cwd frontend build`
+- Formatting command: `bun run --cwd frontend format`
+- Validation commands: `bun run --cwd frontend check` and `bun run --cwd frontend test`
+- Artifact command: `bun run --cwd frontend build`
 
 ## Local architecture
 

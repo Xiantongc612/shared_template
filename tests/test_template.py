@@ -3,7 +3,7 @@ import os
 import subprocess
 from collections.abc import Mapping
 from pathlib import Path
-from shutil import copy2, copytree
+from shutil import copy2, copytree, rmtree
 from typing import Any
 
 import pytest
@@ -543,6 +543,8 @@ def test_copier_update_preserves_answers(tmp_path: Path) -> None:
     source.mkdir()
     copy2(ROOT / "copier.yml", source)
     copytree(ROOT / "template", source / "template")
+    (source / "template" / "AGENTS.md.jinja").unlink()
+    rmtree(source / "template" / ".github")
     _git(source, "init")
     _git(source, "add", ".")
     _git(source, "commit", "-m", "initial template")
@@ -560,6 +562,8 @@ def test_copier_update_preserves_answers(tmp_path: Path) -> None:
     _git(project, "add", ".")
     _git(project, "commit", "-m", "generated project")
 
+    copy2(ROOT / "template" / "AGENTS.md.jinja", source / "template")
+    copytree(ROOT / "template" / ".github", source / "template" / ".github")
     readme_template = source / "template" / "README.md.jinja"
     readme_template.write_text(readme_template.read_text() + "\nUpdate marker.\n")
     _git(source, "add", ".")
@@ -572,6 +576,10 @@ def test_copier_update_preserves_answers(tmp_path: Path) -> None:
     answers = yaml.safe_load((project / ".copier-answers.yml").read_text())
     assert answers["project_name"] == "Updated"
     assert answers["components"] == ["frontend"]
+    assert (project / "AGENTS.md").is_file()
+    assert WORKFLOW_FILES == {
+        path.name for path in (project / ".github" / "workflows").iterdir()
+    }
 
 
 def _git(path: Path, *arguments: str) -> None:

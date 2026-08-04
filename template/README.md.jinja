@@ -20,6 +20,32 @@ Generated from the `shared_template` Copier template.
 - Backend: FastAPI
   - Artifact: {{ fastapi_artifact }}
 {% endif %}
+
+## Project commands
+
+Devbox provides one root interface across every selected component:
+
+```sh
+devbox run init
+devbox run fmt
+devbox run check
+devbox run test
+devbox run build
+```
+
+`fmt` updates formatting. `check`, `test`, and `build` are separate, non-deploying
+validation stages used by the generated GitHub Actions workflows.
+{% if frontend_playwright | default(false) or client_playwright | default(false) %}
+After installing the configured Playwright browsers, run end-to-end tests separately:
+
+```sh
+devbox run test:e2e
+```
+{% endif %}
+
+Pushing a `v*` tag runs validation and publishes a GitHub Release containing the
+selected build artifacts. It does not deploy Workers, push container images, or
+publish to an application store.
 {% if 'backend' in components and 'fastapi' in backend_variants %}
 ## FastAPI backend
 
@@ -31,7 +57,7 @@ uv run --project backend/fastapi ruff check backend/fastapi
 uv run --project backend/fastapi ruff format --check backend/fastapi
 uv run --project backend/fastapi ty check backend/fastapi/app
 uv run --project backend/fastapi pytest backend/fastapi
-docker build backend/fastapi
+docker buildx build --output type=oci,dest=backend/fastapi/dist/fastapi-backend.tar backend/fastapi
 ```
 
 The Docker build creates a local OCI-compatible image and does not publish it.
@@ -44,7 +70,7 @@ The independent Cloudflare Worker service is in `backend/hono/`.
 ```sh
 bun install --cwd backend/hono
 bun run --cwd backend/hono check
-bun test --cwd backend/hono
+bun run --cwd backend/hono test
 bun run --cwd backend/hono build
 ```
 
@@ -59,13 +85,18 @@ The independent Tauri application is in `client/`.
 ```sh
 bun install --cwd client
 bun run --cwd client check
-bun test --cwd client
-bun run --cwd client build
-bun run --cwd client tauri build
+bun run --cwd client test
+cargo fmt --manifest-path client/src-tauri/Cargo.toml --all -- --check
+cargo check --manifest-path client/src-tauri/Cargo.toml --all-targets --all-features
+cargo clippy --manifest-path client/src-tauri/Cargo.toml --all-targets --all-features -- -D warnings
+cargo test --manifest-path client/src-tauri/Cargo.toml --all-features
+bun run --cwd client tauri build --bundles deb,appimage
 ```
 
-The final command requires the platform-specific prerequisites documented by
-Tauri and emits desktop bundles below `client/src-tauri/target/release/bundle/`.
+The final command requires Linux WebKitGTK and related Tauri prerequisites and
+emits AppImage and Debian bundles below `client/src-tauri/target/release/bundle/`.
+macOS and Windows bundles require their respective native runners and are not
+built by the generated workflows.
 {% if client_playwright %}
 Install Chromium with `bunx --cwd client playwright install chromium`, then run
 `bun run --cwd client test:e2e`.
@@ -80,6 +111,7 @@ The independent Astro site is in `frontend/`.
 bun install --cwd frontend
 bun run --cwd frontend dev
 bun run --cwd frontend check
+bun run --cwd frontend format
 bun run --cwd frontend build
 ```
 
@@ -145,7 +177,8 @@ The independent React application is in `frontend/`.
 bun install --cwd frontend
 bun run --cwd frontend dev
 bun run --cwd frontend check
-bun test --cwd frontend
+bun run --cwd frontend format
+bun run --cwd frontend test
 bun run --cwd frontend build
 ```
 

@@ -28,6 +28,9 @@ This document does not prescribe a generated directory layout, cross-component U
 - Devbox for development runtimes and utilities
 - Gitleaks for secret scanning
 - pre-commit for Git hook management
+- Generated root commands for formatting, static checks, unit tests, optional
+  end-to-end tests, and local artifact builds
+- Generated GitHub Actions for check, test, build, and tag-triggered GitHub Releases
 
 ## Frontend
 
