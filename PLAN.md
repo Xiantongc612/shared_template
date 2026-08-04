@@ -88,17 +88,24 @@ repository follows the same validation and pinning discipline it generates.
 
 ### Remaining work
 
-1. Pin the repository Devbox packages to exact versions and keep them in sync
-   with `template/_versions.jinja`; add a synchronization test.
-2. Make the repository Semgrep scan cover repository Python sources, including
-   the test suite, through a committed `.semgrepignore`.
-3. Add a drift-guard test that the generated integration workflow matrix matches
-   the case definitions in `scripts/generated_integration.py`.
-4. Extend the repository pre-commit hooks to the same checks `devbox run check`
-   runs, pinned to the repository tool versions.
-5. Add a repository release workflow for `v*` tags that validates and publishes
-   the template, matching the documented release policy.
-6. Split the repository `test` command from `check` to mirror generated projects.
+None.
+
+### Implemented scope
+
+- The repository Devbox packages are pinned to the same exact versions as the
+  generated pins in `template/_versions.jinja`, and a synchronization test
+  guards the shared tooling set against drift.
+- The repository `.semgrepignore` overrides Semgrep's default test-file
+  exclusions so `devbox run check` scans the repository Python sources including
+  the test suite, while still skipping Jinja templates and generated artifacts.
+- A drift-guard test asserts the generated integration workflow matrix matches
+  the case definitions in `scripts/generated_integration.py`.
+- The repository pre-commit configuration covers gitleaks, actionlint, and Ruff
+  at the same pinned versions `devbox run check` uses.
+- A repository release workflow validates the template on `v*` tags and publishes
+  a GitHub Release, matching the documented release policy.
+- The repository exposes separate `check` and `test` commands that mirror the
+  generated project contract, and the repository workflows run both.
 
 ## Long-Term Goals
 
