@@ -70,6 +70,24 @@ def test_root_devbox_exposes_exact_focused_commands() -> None:
     ]
 
 
+def test_integration_workflow_matrix_matches_case_definitions() -> None:
+    import yaml
+
+    root = Path(__file__).parents[1]
+    workflow = yaml.safe_load(
+        (root / ".github" / "workflows" / "integration.yml").read_text()
+    )
+    matrix = workflow["jobs"]["generated-project"]["strategy"]["matrix"]["include"]
+
+    assert {entry["case"] for entry in matrix} == set(integration.CASES)
+    matrix_by_name = {entry["case"]: entry for entry in matrix}
+    for case in integration.CASE_LIST:
+        entry = matrix_by_name[case.name]
+        assert entry["family"] == case.family
+        assert entry["e2e"] == (case.e2e_component is not None)
+        assert entry["timeout"] > 0
+
+
 def write_static_dist(project: Path, script_reference: str = "assets/app.js") -> None:
     dist = project / "frontend" / "dist"
     (dist / "assets").mkdir(parents=True)
