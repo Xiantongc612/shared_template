@@ -1,0 +1,105 @@
+---
+name: Deploy Cloudflare
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-22.04
+    environment: {% raw %}${{ startsWith(github.ref, 'refs/tags/v') && 'production' || 'staging' }}{% endraw %}
+    concurrency:
+      group: cloudflare-{% raw %}${{ startsWith(github.ref, 'refs/tags/v') && 'production' || 'staging' }}{% endraw %}
+      cancel-in-progress: false
+    env:
+      DEPLOYMENT_ENV: {% raw %}${{ startsWith(github.ref, 'refs/tags/v') && 'production' || 'staging' }}{% endraw %}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install Devbox
+        uses: jetify-com/devbox-install-action@22b0f5500b14df4ea357ce673fbd4ced940ed6a1 # v0.13.0
+        with:
+          enable-cache: true
+      - name: Initialize project
+        run: devbox run init
+{% if 'backend' in components and 'hono' in backend_variants %}
+      - name: Apply Hono infrastructure
+        env:
+          CLOUDFLARE_ACCOUNT_ID: {% raw %}${{ secrets.CLOUDFLARE_ACCOUNT_ID }}{% endraw %}
+          AWS_ACCESS_KEY_ID: {% raw %}${{ secrets.R2_ACCESS_KEY_ID }}{% endraw %}
+          AWS_SECRET_ACCESS_KEY: {% raw %}${{ secrets.R2_SECRET_ACCESS_KEY }}{% endraw %}
+          AWS_REGION: auto
+          R2_STATE_BUCKET: {% raw %}${{ secrets.R2_STATE_BUCKET }}{% endraw %}
+        run: >-
+          tofu -chdir=backend/hono/infrastructure/environments/$DEPLOYMENT_ENV init
+          -backend-config="bucket=$R2_STATE_BUCKET"
+          -backend-config="key=hono.tfstate"
+          -backend-config="region=auto"
+          -backend-config="endpoints={s3=\"https://$CLOUDFLARE_ACCOUNT_ID.r2.cloudflarestorage.com\"}"
+          -backend-config="skip_credentials_validation=true"
+          -backend-config="skip_region_validation=true"
+          -backend-config="skip_requesting_account_id=true"
+          -backend-config="skip_metadata_api_check=true"
+          -backend-config="use_path_style=true"
+          -backend-config="skip_s3_checksum=true"
+      - name: Provision Hono infrastructure
+        env:
+          AWS_ACCESS_KEY_ID: {% raw %}${{ secrets.R2_ACCESS_KEY_ID }}{% endraw %}
+          AWS_SECRET_ACCESS_KEY: {% raw %}${{ secrets.R2_SECRET_ACCESS_KEY }}{% endraw %}
+          AWS_REGION: auto
+          CLOUDFLARE_API_TOKEN: {% raw %}${{ secrets.CLOUDFLARE_API_TOKEN }}{% endraw %}
+          TF_VAR_cloudflare_account_id: {% raw %}${{ secrets.CLOUDFLARE_ACCOUNT_ID }}{% endraw %}
+        run: tofu -chdir=backend/hono/infrastructure/environments/$DEPLOYMENT_ENV apply -auto-approve
+{% endif %}
+{% if 'frontend' in components and frontend_variant == 'astro' %}
+      - name: Apply Astro infrastructure
+        env:
+          CLOUDFLARE_ACCOUNT_ID: {% raw %}${{ secrets.CLOUDFLARE_ACCOUNT_ID }}{% endraw %}
+          AWS_ACCESS_KEY_ID: {% raw %}${{ secrets.R2_ACCESS_KEY_ID }}{% endraw %}
+          AWS_SECRET_ACCESS_KEY: {% raw %}${{ secrets.R2_SECRET_ACCESS_KEY }}{% endraw %}
+          AWS_REGION: auto
+          R2_STATE_BUCKET: {% raw %}${{ secrets.R2_STATE_BUCKET }}{% endraw %}
+        run: >-
+          tofu -chdir=frontend/infrastructure/environments/$DEPLOYMENT_ENV init
+          -backend-config="bucket=$R2_STATE_BUCKET"
+          -backend-config="key=astro.tfstate"
+          -backend-config="region=auto"
+          -backend-config="endpoints={s3=\"https://$CLOUDFLARE_ACCOUNT_ID.r2.cloudflarestorage.com\"}"
+          -backend-config="skip_credentials_validation=true"
+          -backend-config="skip_region_validation=true"
+          -backend-config="skip_requesting_account_id=true"
+          -backend-config="skip_metadata_api_check=true"
+          -backend-config="use_path_style=true"
+          -backend-config="skip_s3_checksum=true"
+      - name: Provision Astro infrastructure
+        env:
+          AWS_ACCESS_KEY_ID: {% raw %}${{ secrets.R2_ACCESS_KEY_ID }}{% endraw %}
+          AWS_SECRET_ACCESS_KEY: {% raw %}${{ secrets.R2_SECRET_ACCESS_KEY }}{% endraw %}
+          AWS_REGION: auto
+          CLOUDFLARE_API_TOKEN: {% raw %}${{ secrets.CLOUDFLARE_API_TOKEN }}{% endraw %}
+          TF_VAR_cloudflare_account_id: {% raw %}${{ secrets.CLOUDFLARE_ACCOUNT_ID }}{% endraw %}
+        run: tofu -chdir=frontend/infrastructure/environments/$DEPLOYMENT_ENV apply -auto-approve
+{% endif %}
+      - name: Build project artifacts
+        run: devbox run build
+{% if 'backend' in components and 'hono' in backend_variants %}
+      - name: Release Hono Worker
+        env:
+          CLOUDFLARE_ACCOUNT_ID: {% raw %}${{ secrets.CLOUDFLARE_ACCOUNT_ID }}{% endraw %}
+          CLOUDFLARE_API_TOKEN: {% raw %}${{ secrets.CLOUDFLARE_API_TOKEN }}{% endraw %}
+        run: bun run --cwd backend/hono release:$DEPLOYMENT_ENV
+{% endif %}
+{% if 'frontend' in components and frontend_variant == 'astro' %}
+      - name: Release Astro site
+        env:
+          CLOUDFLARE_ACCOUNT_ID: {% raw %}${{ secrets.CLOUDFLARE_ACCOUNT_ID }}{% endraw %}
+          CLOUDFLARE_API_TOKEN: {% raw %}${{ secrets.CLOUDFLARE_API_TOKEN }}{% endraw %}
+        run: bun run --cwd frontend release:$DEPLOYMENT_ENV -- --commit-hash "$GITHUB_SHA"
+{% endif %}

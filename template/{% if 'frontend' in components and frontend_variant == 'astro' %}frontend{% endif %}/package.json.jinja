@@ -7,7 +7,9 @@
     "dev": "astro dev",
     "build": "astro build",
     "check": "biome check . && astro check",
-    "format": "biome format --write ."{% if frontend_playwright %},
+    "format": "biome format --write .",
+    "release:staging": "wrangler pages deploy dist --project-name={{ cloudflare_project_id }}-astro-staging --branch=main",
+    "release:production": "wrangler pages deploy dist --project-name={{ cloudflare_project_id }}-astro-production --branch=main"{% if frontend_playwright %},
     "test:e2e": "playwright test"{% endif %}
   },
   "dependencies": {
@@ -19,7 +21,8 @@
   "devDependencies": {
     "@astrojs/check": "0.9.10",
     "@biomejs/biome": "2.5.6",
-    "typescript": "6.0.3"{% if frontend_playwright %},
+    "typescript": "6.0.3",
+    "wrangler": "4.118.0"{% if frontend_playwright %},
     "@playwright/test": "1.62.1"{% endif %}
   }
 }

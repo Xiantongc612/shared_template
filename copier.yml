@@ -50,6 +50,21 @@ backend_variants:
     Select at least one of Hono or FastAPI when Backend is selected.
     {% endif %}
 
+cloudflare_project_id:
+  type: str
+  help: Lowercase identifier used to name Cloudflare resources.
+  default: >-
+    {%- set slug = project_name | lower | regex_replace('[^a-z0-9]+', '-') | regex_replace('^-+|-+$', '') -%}
+    {{- (slug[:46] | regex_replace('-+$', '')) or 'project' -}}
+  when: >-
+    {{ ('frontend' in components and frontend_variant == 'astro') or
+       ('backend' in components and 'hono' in backend_variants) }}
+  validator: >-
+    {% if not (cloudflare_project_id | regex_search('^[a-z0-9](?:[a-z0-9-]{0,44}[a-z0-9])?$')) %}
+    Cloudflare project ID must use 1-46 lowercase letters, numbers, or hyphens,
+    and must start and end with a letter or number.
+    {% endif %}
+
 frontend_playwright:
   type: bool
   help: Add Playwright end-to-end testing to the frontend.

@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "build": "wrangler deploy --dry-run --outdir dist",
+    "build": "wrangler deploy --env=\"\" --dry-run --outdir dist",
+    "release:staging": "wrangler versions upload --env staging --strict --tag $GITHUB_SHA --message $GITHUB_SHA && wrangler versions deploy --env staging --version-tag $GITHUB_SHA --yes",
+    "release:production": "wrangler versions upload --env production --strict --tag $GITHUB_SHA --message $GITHUB_SHA && wrangler versions deploy --env production --version-tag $GITHUB_SHA --yes",
     "check": "biome check . && tsc --noEmit",
     "format": "biome format --write .",
     "test": "bun test"

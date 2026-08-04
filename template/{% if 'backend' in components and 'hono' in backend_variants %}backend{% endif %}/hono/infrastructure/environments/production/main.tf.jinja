@@ -1,0 +1,25 @@
+terraform {
+  required_version = "= 1.12.5"
+  backend "s3" {}
+
+  required_providers {
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "= 5.22.0"
+    }
+  }
+}
+
+variable "cloudflare_account_id" {
+  type        = string
+  description = "Cloudflare account identifier."
+}
+
+provider "cloudflare" {}
+
+module "worker" {
+  source = "../../modules/worker"
+
+  account_id = var.cloudflare_account_id
+  name       = "{{ cloudflare_project_id }}-hono-production"
+}

@@ -13,6 +13,12 @@
   design decision.
 - Keep validation local. Building artifacts must not deploy services, publish
   packages, push images, or modify remote resources.
+{% if ('frontend' in components and frontend_variant == 'astro') or ('backend' in components and 'hono' in backend_variants) -%}
+- OpenTofu validation must use `-backend=false`. Applying infrastructure or
+  running Wrangler release commands requires explicit deployment authorization.
+- Keep staging and production roots, R2 state, credentials, resources, and GitHub
+  environments separate. Never put account IDs or resolved secrets in source.
+{% endif -%}
 - Never commit secrets, local environment files, dependency directories, or build
   outputs.
 
@@ -24,6 +30,8 @@
 - Source and tests are under `frontend/`.
 - Use Bun scripts in `frontend/package.json` for component-local work.
 - The production artifact is `frontend/dist/`.
+- OpenTofu owns the Pages projects and Wrangler uploads the static artifact; do
+  not add an adapter, Pages Functions, or server-side rendering.
 
 {% elif 'frontend' in components -%}
 ### Astro Frontend
@@ -56,6 +64,8 @@
 - `bun run --cwd backend/hono build` uses Wrangler dry-run mode and must remain a
   local artifact build rather than a deployment.
 - The production artifact is `backend/hono/dist/`.
+- OpenTofu owns the Worker resources; Wrangler owns application versions and
+  deployments so Worker code does not enter OpenTofu state.
 
 {% endif -%}
 {% if 'backend' in components and 'fastapi' in backend_variants -%}
@@ -73,3 +83,7 @@
 - A separate end-to-end job is present only when Playwright is selected.
 - Pushing a `v*` tag validates the project and creates a GitHub Release containing
   selected component artifacts. It does not deploy or publish to external services.
+{% if ('frontend' in components and frontend_variant == 'astro') or ('backend' in components and 'hono' in backend_variants) -%}
+- The separate Cloudflare workflow deploys `main` to staging and `v*` tags to the
+  protected production environment. It must never run for pull requests.
+{% endif %}

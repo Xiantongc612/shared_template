@@ -2,7 +2,8 @@
   "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.17.5/.schema/devbox.schema.json",
   "packages": [
     "gitleaks@8.30.1",
-    "pre-commit@4.5.1"{% if 'frontend' in components or 'client' in components or ('backend' in components and 'hono' in backend_variants) %},
+    "pre-commit@4.5.1"{% if ('frontend' in components and frontend_variant == 'astro') or ('backend' in components and 'hono' in backend_variants) %},
+    "opentofu@1.12.5"{% endif %}{% if 'frontend' in components or 'client' in components or ('backend' in components and 'hono' in backend_variants) %},
     "bun@1.3.13"{% endif %}{% if 'client' in components %},
     "cargo@1.97.1",
     "rustc@1.97.1",
@@ -22,20 +23,32 @@
         "uv sync --project backend/fastapi"{% endif %}
       ],
       "fmt": [{% if 'frontend' in components %}
-        "bun run --cwd frontend format"{% if 'client' in components or ('backend' in components and ('hono' in backend_variants or 'fastapi' in backend_variants)) %},{% endif %}{% endif %}{% if 'client' in components %}
+        "bun run --cwd frontend format"{% if frontend_variant == 'astro' or 'client' in components or ('backend' in components and ('hono' in backend_variants or 'fastapi' in backend_variants)) %},{% endif %}{% if frontend_variant == 'astro' %}
+        "tofu fmt -recursive frontend/infrastructure"{% if 'client' in components or ('backend' in components and ('hono' in backend_variants or 'fastapi' in backend_variants)) %},{% endif %}{% endif %}{% endif %}{% if 'client' in components %}
         "bun run --cwd client format",
         "cargo fmt --manifest-path client/src-tauri/Cargo.toml --all"{% if 'backend' in components and ('hono' in backend_variants or 'fastapi' in backend_variants) %},{% endif %}{% endif %}{% if 'backend' in components and 'hono' in backend_variants %}
-        "bun run --cwd backend/hono format"{% if 'fastapi' in backend_variants %},{% endif %}{% endif %}{% if 'backend' in components and 'fastapi' in backend_variants %}
+        "bun run --cwd backend/hono format",
+        "tofu fmt -recursive backend/hono/infrastructure"{% if 'fastapi' in backend_variants %},{% endif %}{% endif %}{% if 'backend' in components and 'fastapi' in backend_variants %}
         "uv run --project backend/fastapi ruff format backend/fastapi"{% endif %}
       ],
       "check": [
         "gitleaks git"{% if 'frontend' in components %},
-        "bun run --cwd frontend check"{% endif %}{% if 'client' in components %},
+        "bun run --cwd frontend check"{% if frontend_variant == 'astro' %},
+        "tofu fmt -check -recursive frontend/infrastructure",
+        "tofu -chdir=frontend/infrastructure/environments/staging init -backend=false",
+        "tofu -chdir=frontend/infrastructure/environments/staging validate",
+        "tofu -chdir=frontend/infrastructure/environments/production init -backend=false",
+        "tofu -chdir=frontend/infrastructure/environments/production validate"{% endif %}{% endif %}{% if 'client' in components %},
         "bun run --cwd client check",
         "cargo fmt --manifest-path client/src-tauri/Cargo.toml --all -- --check",
         "cargo check --manifest-path client/src-tauri/Cargo.toml --all-targets --all-features",
         "cargo clippy --manifest-path client/src-tauri/Cargo.toml --all-targets --all-features -- -D warnings"{% endif %}{% if 'backend' in components and 'hono' in backend_variants %},
-        "bun run --cwd backend/hono check"{% endif %}{% if 'backend' in components and 'fastapi' in backend_variants %},
+        "bun run --cwd backend/hono check",
+        "tofu fmt -check -recursive backend/hono/infrastructure",
+        "tofu -chdir=backend/hono/infrastructure/environments/staging init -backend=false",
+        "tofu -chdir=backend/hono/infrastructure/environments/staging validate",
+        "tofu -chdir=backend/hono/infrastructure/environments/production init -backend=false",
+        "tofu -chdir=backend/hono/infrastructure/environments/production validate"{% endif %}{% if 'backend' in components and 'fastapi' in backend_variants %},
         "uv run --project backend/fastapi ruff check backend/fastapi",
         "uv run --project backend/fastapi ruff format --check backend/fastapi",
         "uv run --project backend/fastapi ty check backend/fastapi/app"{% endif %}

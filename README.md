@@ -39,6 +39,7 @@ design decisions documented in `PLAN.md`.
 - Generated root commands for formatting, static checks, unit tests, optional
   end-to-end tests, and local artifact builds
 - Generated GitHub Actions for check, test, build, and tag-triggered GitHub Releases
+- Component-owned OpenTofu and Cloudflare release automation for Hono and Astro
 
 ## Frontend
 
@@ -58,6 +59,7 @@ The frontend produces provider-neutral static-site artifacts.
 - Bun as package manager and runtime
 - TypeScript
 - Biome for linting and formatting
+- Static Cloudflare Pages projects for isolated staging and production releases
 
 ### Optional frontend integrations
 
@@ -86,6 +88,7 @@ The Hono backend produces a Cloudflare edge-function artifact.
 - Bun as package manager, runtime, and test runner
 - Hono as the web framework
 - AI SDK (`ai`) as an optional AI integration
+- OpenTofu-owned staging and production Workers released with Wrangler versions
 
 ### FastAPI service
 

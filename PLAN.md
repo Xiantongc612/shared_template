@@ -2,8 +2,8 @@
 
 The repository tooling, Copier questionnaire, shared files, update coverage,
 component generators, generated project commands, and GitHub Actions automation
-are implemented. The active milestone adds Cloudflare infrastructure and release
-automation for the existing Hono and Astro generators.
+are implemented. Cloudflare infrastructure and release automation are implemented
+for the Hono and Astro generators.
 
 ## Constraints
 
@@ -44,31 +44,23 @@ automation for the existing Hono and Astro generators.
   Cloudflare credentials, account identifiers, and other environment-specific
   values are supplied outside generated source and are never committed.
 
-### Remaining work
+### Implemented scope
 
-1. Add a Cloudflare-safe project identifier and its validation to the Copier
-   questionnaire without changing existing answer names or shapes. Add update
-   coverage for the new answer.
-2. Add exact OpenTofu, Cloudflare provider, and Astro Wrangler pins only when the
-   selected components require them.
-3. Generate component-owned OpenTofu modules and separate staging and production
-   roots for Hono Workers and Astro Pages projects. Include formatting and local
-   validation commands that cannot mutate remote resources.
-4. Add matching staging and production release configuration to Hono and Astro.
-   Preserve the existing local artifact commands as non-deploying builds and keep
-   Astro's output static.
-5. Generate a conditional Cloudflare deployment workflow for selected Hono and
-   Astro components. Serialize deployments per environment, apply infrastructure,
-   build locally, and release with Wrangler using environment-scoped credentials.
-6. Document backend bootstrap, required token permissions, GitHub environments,
-   staging and production release behavior, and rollback procedures in generated
-   projects and component documentation.
-7. Add render and update tests for conditional output, independent environment
-   state, exact pins, least-privilege workflows, and the absence of deployment
-   residue from unselected components.
-8. Extend Hono and Astro integration validation with `tofu fmt -check`,
-   `tofu init -backend=false`, and `tofu validate`. Keep integration tests local
-   and finish with the full repository check and generated integration suite.
+- The questionnaire adds an update-compatible, validated Cloudflare project
+  identifier only for Hono and Astro selections.
+- Generated Hono and Astro projects pin OpenTofu, the Cloudflare provider, and
+  Wrangler exactly where required.
+- Each component owns separate staging and production OpenTofu roots backed by
+  environment-specific Cloudflare R2 state.
+- Local commands format, initialize with `-backend=false`, validate, test, and
+  build without remote mutations.
+- A conditional GitHub workflow serializes each environment, applies
+  infrastructure, builds locally, and releases through Wrangler. `main` targets
+  staging and `v*` tags target the protected production environment.
+- Generated and component documentation covers R2 bootstrap, token permissions,
+  GitHub environments, release behavior, and rollback.
+- Render, historical update, conditional output, exact pin, workflow, and focused
+  generated integration coverage enforce these contracts.
 
 ## Future Design Decisions
 

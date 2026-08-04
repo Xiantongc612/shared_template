@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "{{ cloudflare_project_id }}-hono-local",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-04",
+  "env": {
+    "staging": {
+      "name": "{{ cloudflare_project_id }}-hono-staging"
+    },
+    "production": {
+      "name": "{{ cloudflare_project_id }}-hono-production"
+    }
+  }
+}

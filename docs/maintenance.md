@@ -5,9 +5,9 @@
 Repository Python dependencies are constrained in `pyproject.toml` and resolved
 in `uv.lock`. Devbox packages are resolved in `devbox.lock`. Generated component
 manifests use exact direct dependency versions and do not include committed
-lockfiles. Initialization creates local Devbox, Bun, and uv lockfiles, while
-Cargo creates its local lockfile on first resolution; generated projects ignore
-these files. Transitive dependency versions remain ecosystem-resolved.
+lockfiles. Initialization creates local Devbox, Bun, uv, and OpenTofu lockfiles,
+while Cargo creates its local lockfile on first resolution; generated projects
+ignore these files. Transitive dependency versions remain ecosystem-resolved.
 
 Update one ecosystem at a time:
 
@@ -64,4 +64,6 @@ Generated projects include separate check, test, build, and GitHub Release
 workflows. Their release workflow publishes selected artifacts to a GitHub
 Release from a `v*` tag. Tauri automation produces Linux AppImage and Debian
 bundles only because macOS and Windows artifacts require native runners. OCI and
-Cloudflare artifacts are built locally without registry publication or deployment.
+Cloudflare artifacts are built locally without deployment by these validation and
+GitHub Release workflows. A separate environment-protected workflow applies
+component infrastructure and releases Hono and Astro to Cloudflare.

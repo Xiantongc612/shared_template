@@ -46,6 +46,47 @@ devbox run test:e2e
 Pushing a `v*` tag runs validation and publishes a GitHub Release containing the
 selected build artifacts. It does not deploy Workers, push container images, or
 publish to an application store.
+{% if ('frontend' in components and frontend_variant == 'astro') or ('backend' in components and 'hono' in backend_variants) %}
+## Cloudflare deployment
+
+Cloudflare resources use the identifier `{{ cloudflare_project_id }}`. The
+`Deploy Cloudflare` workflow releases `main` to the protected `staging` GitHub
+environment and `v*` tags to the protected `production` environment. Each
+environment must define these secrets:
+
+- `CLOUDFLARE_ACCOUNT_ID`: target Cloudflare account.
+- `CLOUDFLARE_API_TOKEN`: environment-specific API token.
+- `R2_STATE_BUCKET`: environment-specific R2 bucket created before the first run.
+- `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY`: credentials restricted to that
+  state bucket.
+
+Create separate R2 buckets and credentials for staging and production. The API
+token needs{% if 'backend' in components and 'hono' in backend_variants %} Workers Scripts Edit{% endif %}{% if 'frontend' in components and frontend_variant == 'astro' %}{% if 'backend' in components and 'hono' in backend_variants %} and{% endif %} Cloudflare Pages Edit{% endif %}.
+Configure the production GitHub environment with required reviewers so its
+credentials remain the approval boundary.
+
+OpenTofu uses R2 through its S3-compatible endpoint. Its backend blocks are
+intentionally partial: the workflow supplies the bucket, endpoint, and credentials
+without writing them to source. State keys are component-specific, and staging
+and production run from separate roots.
+
+`devbox run check` formats and validates every root with `-backend=false`; it does
+not contact R2 or Cloudflare. Do not run `tofu apply`, Wrangler release commands,
+or the deployment workflow as ordinary validation.
+
+{% if 'backend' in components and 'hono' in backend_variants %}
+To roll Hono back, list versions with `wrangler versions list --env <environment>`
+and deploy the previous version with `wrangler versions deploy --env <environment>
+<version-id>@100% --yes`.
+{% endif %}
+{% if 'frontend' in components and frontend_variant == 'astro' %}
+To roll Astro back, locate the previous deployment with
+`wrangler pages deployment list --project-name <project-name>` and use the
+Cloudflare Pages dashboard to promote that deployment.
+{% endif %}
+Infrastructure rollback is a reviewed source revert followed by the matching
+environment workflow; never copy state between environments.
+{% endif %}
 {% if 'backend' in components and 'fastapi' in backend_variants %}
 ## FastAPI backend
 
@@ -76,6 +117,11 @@ bun run --cwd backend/hono build
 
 The build command uses Wrangler's local `--dry-run` mode and writes the edge
 artifact to `backend/hono/dist/`; it does not deploy remote resources.
+
+OpenTofu owns the separate `{{ cloudflare_project_id }}-hono-staging` and
+`{{ cloudflare_project_id }}-hono-production` Worker resources. Wrangler uploads
+immutable versions and then sends all traffic to the version tagged with the
+workflow commit.
 {% endif %}
 {% if 'client' in components %}
 ## Desktop client
@@ -115,7 +161,10 @@ bun run --cwd frontend format
 bun run --cwd frontend build
 ```
 
-The production artifact is the provider-neutral `frontend/dist/` directory.
+The production artifact remains the provider-neutral `frontend/dist/` directory.
+OpenTofu owns separate staging and production Pages projects, while Wrangler
+uploads this static directory. No adapter, Pages Functions, or server-side runtime
+is configured.
 {% if frontend_playwright %}
 Install a Playwright browser with `bunx --cwd frontend playwright install chromium`,
 then run the end-to-end suite with `bun run --cwd frontend test:e2e`.
