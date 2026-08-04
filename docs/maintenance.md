@@ -83,6 +83,13 @@ Template releases use semantic versioning:
 Template release tags must be PEP 440-compatible so Copier can order template
 versions. Every template release must pass CI from a clean checkout.
 
+The repository `.github/workflows/release.yml` validates the template and
+publishes a GitHub Release from a `v*` tag. To cut a release, create and push
+the version tag (for example `git tag v0.2.0 && git push origin v0.2.0`); the
+workflow runs the full repository check and attaches the template archive. The
+release workflow is not a deployment and does not modify remote resources beyond
+the GitHub Release.
+
 Generated projects include separate check, test, build, and GitHub Release
 workflows. Their release workflow publishes selected artifacts to a GitHub
 Release from a `v*` tag. Tauri automation produces Linux AppImage and Debian

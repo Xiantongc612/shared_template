@@ -31,6 +31,20 @@ def test_repository_workflows_pin_runners_actions_and_devbox() -> None:
     assert "persist-credentials: false" in workflow_text
 
 
+def test_repository_release_workflow_publishes_template_on_version_tags() -> None:
+    release = yaml.safe_load(
+        (ROOT / ".github" / "workflows" / "release.yml").read_text()
+    )
+
+    assert release[True]["push"]["tags"] == ["v*"]
+    jobs = release["jobs"]
+    assert set(jobs) == {"prepare", "publish"}
+    assert jobs["publish"]["needs"] == "prepare"
+    assert jobs["prepare"]["permissions"]["contents"] == "read"
+    assert jobs["publish"]["permissions"]["contents"] == "write"
+    assert "gh release create" in jobs["publish"]["steps"][-1]["run"]
+
+
 def test_rendered_workflows_pin_external_actions_and_devbox(render: Render) -> None:
     project = render(
         "Everything",
