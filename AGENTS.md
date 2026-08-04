@@ -6,6 +6,9 @@
 - Keep components independent. Do not invent a universal generated layout, shared UI package, Docker Compose setup, or service orchestration without an explicit design decision.
 - Treat frontend, client, Hono, and FastAPI as separate generators with component-specific outputs.
 - Do not implement deferred capabilities without an explicit design decision.
+- Cloudflare deployment for Hono and static Astro is approved in `PLAN.md`; keep
+  its infrastructure and releases component-owned rather than introducing shared
+  runtime dependencies.
 
 ## Working method
 
@@ -32,6 +35,24 @@
 - Preserve `.copier-answers.yml` compatibility and add update tests before changing existing question names or answer shapes.
 - Keep generated direct dependency declarations exact and do not emit generated
   lockfiles as template output.
+- Keep Astro static for Cloudflare Pages. Do not add the Cloudflare adapter, Pages
+  Functions, or server-side rendering as part of the deployment milestone.
+
+## Cloudflare deployment design
+
+- Use separate staging and production Worker resources, Pages projects, OpenTofu
+  roots, state, credentials, and GitHub environments.
+- Let OpenTofu own the Hono Worker resource and Astro Pages project. Let Wrangler
+  bundle and release Hono versions and upload Astro's static `frontend/dist/`
+  artifact; do not put application bundles in OpenTofu state.
+- Use partial remote-backend configuration and environment-provided credentials.
+  Never generate backend credentials, Cloudflare tokens, account identifiers, or
+  resolved secret values.
+- Keep formatting, checks, tests, builds, and infrastructure validation
+  non-deploying. Deployment commands and workflows must be explicit and must not
+  run for pull requests.
+- Release `main` to staging and `v*` tags to production. Preserve GitHub
+  environment protection as the approval boundary for production.
 
 ## Secrets and 1Password on Windows
 
