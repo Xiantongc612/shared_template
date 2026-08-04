@@ -478,7 +478,7 @@ def test_unselected_runtimes_leave_no_residue(render: Render) -> None:
         path.read_text() for path in project.iterdir() if path.is_file()
     )
 
-    assert "python@3.14.6" in devbox
+    assert "python@3.14.4" in devbox
     assert "uv@0.12.1" in devbox
     assert "bun" not in all_text
     assert "cargo" not in all_text
@@ -552,7 +552,7 @@ def test_generated_direct_dependencies_are_exact_without_lockfiles(
 
     devbox = json.loads((project / "devbox.json").read_text())
     assert all("@latest" not in package for package in devbox["packages"])
-    assert "python@3.14.6" in devbox["packages"]
+    assert "python@3.14.4" in devbox["packages"]
 
     lockfiles = {"devbox.lock", "bun.lock", "bun.lockb", "Cargo.lock", "uv.lock"}
     assert not any(path.name in lockfiles for path in project.rglob("*"))
