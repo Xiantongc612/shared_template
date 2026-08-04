@@ -1,5 +1,6 @@
 import json
 
+import yaml
 from support import ROOT, Render
 
 
@@ -94,3 +95,10 @@ def test_repository_tooling_versions_match_template(render: Render) -> None:
     shared = root_packages.keys() & generated_packages.keys()
     assert shared == {"actionlint", "bun", "gitleaks", "pre-commit", "semgrep"}
     assert all(root_packages[name] == generated_packages[name] for name in shared)
+
+
+def test_repository_pre_commit_covers_check_steps() -> None:
+    config = yaml.safe_load((ROOT / ".pre-commit-config.yaml").read_text())
+    hook_ids = {hook["id"] for repo in config["repos"] for hook in repo["hooks"]}
+
+    assert hook_ids >= {"gitleaks", "actionlint", "ruff", "ruff-format"}
