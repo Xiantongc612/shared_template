@@ -57,7 +57,7 @@ The frontend produces provider-neutral static-site artifacts.
 
 - Playwright for end-to-end tests
 - AI SDK (`ai`) for AI integration
-- TanStack Query for server-state synchronization
+- TanStack Query for server-state synchronization in the React variant
 - i18next for internationalization
 
 ## Client
