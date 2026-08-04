@@ -1,0 +1,98 @@
+rules:
+  - id: python-shell-injection
+    pattern-either:
+      - pattern: subprocess.run($ARGS, ..., shell=True, ...)
+      - pattern: subprocess.Popen($ARGS, ..., shell=True, ...)
+      - pattern: subprocess.call($ARGS, ..., shell=True, ...)
+      - pattern: subprocess.check_call($ARGS, ..., shell=True, ...)
+      - pattern: subprocess.check_output($ARGS, ..., shell=True, ...)
+      - pattern: os.system($COMMAND)
+      - pattern: os.popen($COMMAND)
+      - pattern: os.popen2($COMMAND)
+      - pattern: os.popen3($COMMAND)
+      - pattern: os.popen4($COMMAND)
+    message: >-
+      Shell execution via `shell=True` or os.popen can introduce command
+      injection when the command includes untrusted input. Pass an argument
+      list without `shell=True` instead.
+    languages:
+      - python
+    severity: WARNING
+    metadata:
+      cwe:
+        - "CWE-78: Improper Neutralization of Special Elements used in an OS Command ('OS Command Injection')"
+
+  - id: python-eval-exec
+    pattern-either:
+      - pattern: eval($CODE)
+      - pattern: exec($CODE)
+      - pattern: execfile($FILE)
+    message: >-
+      Dynamic evaluation of strings can execute arbitrary code. Avoid eval,
+      exec, and execfile when the input may be untrusted.
+    languages:
+      - python
+    severity: WARNING
+    metadata:
+      cwe:
+        - "CWE-95: Improper Neutralization of Directives in Dynamically Evaluated Code ('Eval Injection')"
+
+  - id: python-insecure-deserialization
+    pattern-either:
+      - pattern: pickle.load($STREAM)
+      - pattern: pickle.loads($DATA)
+      - pattern: marshal.loads($DATA)
+      - pattern: yaml.load($STREAM)
+      - pattern: yaml.unsafe_load($STREAM)
+    message: >-
+      Deserializing untrusted data with pickle, marshal, or unsafe yaml.load can
+      execute arbitrary code. Use a safe loader or a structured format.
+    languages:
+      - python
+    severity: WARNING
+    metadata:
+      cwe:
+        - "CWE-502: Deserialization of Untrusted Data"
+
+  - id: python-insecure-tempfile
+    pattern: tempfile.mktemp(...)
+    message: >-
+      tempfile.mktemp is vulnerable to race conditions and can be attacked via
+      symlink prediction. Use tempfile.mkstemp or tempfile.TemporaryFile.
+    languages:
+      - python
+    severity: WARNING
+    metadata:
+      cwe:
+        - "CWE-377: Insecure Temporary File"
+
+  - id: python-ssl-verification-disabled
+    pattern-either:
+      - pattern: requests.get($URL, ..., verify=False, ...)
+      - pattern: requests.post($URL, ..., verify=False, ...)
+      - pattern: requests.put($URL, ..., verify=False, ...)
+      - pattern: requests.delete($URL, ..., verify=False, ...)
+      - pattern: urllib3.disable_warnings()
+    message: >-
+      Disabling TLS certificate verification permits man-in-the-middle attacks.
+      Keep verification enabled and use a pinned CA bundle if needed.
+    languages:
+      - python
+    severity: WARNING
+    metadata:
+      cwe:
+        - "CWE-295: Improper Certificate Validation"
+
+  - id: hardcoded-password
+    languages:
+      - python
+    message: >-
+      A hardcoded password or secret was detected. Move secrets to environment
+      variables or a secret store and never commit them.
+    pattern-either:
+      - pattern-regex: (?i)(password|passwd|secret|api_key|apikey|token)\s*=\s*["'][^"']{6,}["']
+      - pattern-regex: (?i)os\.environ\.(get|getenv)\(["'](PASSWORD|PASSWD|SECRET|API_KEY|TOKEN)["']\s*,\s*["'][^"']+["']
+    severity: WARNING
+    metadata:
+      cwe:
+        - "CWE-798: Use of Hard-coded Credentials"

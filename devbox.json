@@ -5,7 +5,8 @@
     "gitleaks@latest",
     "pre-commit@latest",
     "bun@latest",
-    "actionlint@1.7.12"
+    "actionlint@1.7.12",
+    "semgrep@1.164.0"
   ],
   "shell": {
     "init_hook": [],
@@ -17,6 +18,7 @@
       "check": [
         "gitleaks git",
         "uv lock --check",
+        "semgrep scan --config semgrep.yml",
         "actionlint",
         "uv run --locked ruff check .",
         "uv run --locked ruff format --check .",

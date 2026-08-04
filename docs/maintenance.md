@@ -23,6 +23,25 @@ Use `devbox update <package>` for repository Devbox packages and `uv lock
 dependency and tool versions are updated in `template/_versions.jinja` and
 validated through the render matrix plus a local artifact build.
 
+The repository Semgrep package is pinned in `devbox.json` and the generated
+Semgrep package is pinned in `template/_versions.jinja`. Keep both versions in
+sync when updating Semgrep.
+
+## Semgrep rules
+
+The repository scans with the committed `semgrep.yml` rule file, and generated
+projects scan with a component-aware rule file emitted from
+`template/semgrep.yml.jinja`. Rules are vendored so `devbox run check` stays
+offline and deterministic; no registry download or result upload is performed.
+
+To refresh the rule sets, render a representative generated project, run
+`semgrep scan --config auto` with a scratch profile to compare coverage, then
+fold any new high-value, low-false-positive patterns into `semgrep.yml` and
+`template/semgrep.yml.jinja`. Validate with
+`semgrep scan --validate --config <file>` and confirm the repository and
+generated scans still pass with zero unexpected findings. Commit the rule
+update separately from behavioral template changes.
+
 ## Copier compatibility
 
 Question names and answer shapes form the update API. Before changing either,

@@ -51,6 +51,7 @@ def test_repository_commands_enforce_uv_lock() -> None:
 
     assert "uv lock --check" in scripts["check"]
     assert "actionlint" in scripts["check"]
+    assert "semgrep scan --config semgrep.yml" in scripts["check"]
     uv_commands = [
         command
         for commands in scripts.values()
@@ -59,3 +60,13 @@ def test_repository_commands_enforce_uv_lock() -> None:
     ]
     assert uv_commands
     assert all(command.startswith("uv run --locked ") for command in uv_commands)
+
+
+def test_repository_pins_semgrep() -> None:
+    devbox = json.loads((ROOT / "devbox.json").read_text())
+
+    semgrep = next(
+        package for package in devbox["packages"] if package.startswith("semgrep@")
+    )
+    assert semgrep.split("@", 1)[1] != "latest"
+    assert (ROOT / "semgrep.yml").is_file()
