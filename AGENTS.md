@@ -30,6 +30,9 @@
 - Allow Hono, FastAPI, or both when Backend is selected; reject an empty backend selection.
 - Keep frontend and client optional integrations independently selectable.
 - Keep optional integrations disabled by default.
+- Treat Semgrep SAST as shared tooling (like Gitleaks and actionlint), always
+  enabled for the repository and every generated project with vendored rules.
+  Do not implement SonarQube or SonarCloud server-based analysis.
 - Derive fixed artifact types from component choices rather than asking users to select them.
 - Avoid emitting configuration, dependencies, files, or documentation for unselected components.
 - Preserve `.copier-answers.yml` compatibility and add update tests before changing existing question names or answer shapes.

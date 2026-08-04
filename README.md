@@ -38,6 +38,7 @@ design decisions documented in `PLAN.md`.
 
 - Devbox for development runtimes and utilities
 - Gitleaks for secret scanning
+- Semgrep for static application security testing with vendored rules
 - actionlint for semantic validation of root and generated GitHub workflows
 - pre-commit for Git hook management
 - Generated root commands for formatting, static checks, unit tests, optional
