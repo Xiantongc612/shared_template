@@ -21,6 +21,11 @@
   checks, tests, and artifact builds. Use the matching `*-integrations` command
   for optional integrations; `devbox run integration` runs the full suite.
 - Template rendering and local artifact builds are validation. Commands that mutate remote resources are deployments and require explicit user authorization.
+- Keep repository tooling pins in `devbox.json` synchronized with the generated
+  pins in `template/_versions.jinja`; add or update a synchronization test when
+  a shared tool version changes.
+- Keep the repository `.semgrepignore`, pre-commit hooks, and integration case
+  metadata consistent with their generated or scripted counterparts.
 
 ## Copier design rules
 
@@ -90,7 +95,8 @@ OP_SERVICE_ACCOUNT_TOKEN="$(op.exe read 'op://Infrastructure/1Password Service T
 
 ## Deployment safety
 
-- Treat `devbox run boot` and `devbox run comp` as deployment operations because they modify remote systems.
+- Treat deployment workflows and any command that mutates remote resources as
+  deployment operations.
 - Do not run deployment commands, publish artifacts, push images, or mutate Cloudflare or other remote resources unless the user explicitly asks for that operation.
 - Do not interpret a request to test or validate as permission to deploy.
 

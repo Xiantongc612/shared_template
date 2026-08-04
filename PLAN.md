@@ -3,9 +3,10 @@
 The repository tooling, Copier questionnaire, shared files, update coverage,
 component generators, generated project commands, and GitHub Actions automation
 are implemented. Cloudflare infrastructure and release automation for the Hono
-and Astro generators are implemented. The active milestone adds Semgrep static
-application security testing as shared tooling for the repository and generated
-projects.
+and Astro generators are implemented. Semgrep static application security
+testing is implemented as shared tooling for the repository and generated
+projects. The active milestone resolves repository-hygiene debt so the
+repository follows the same validation and pinning discipline it generates.
 
 ## Constraints
 
@@ -67,6 +68,46 @@ projects.
 - Tests cover the root and generated pins, generated config validity, the
   presence of the Semgrep step in root and generated `check` commands, and
   component-aware rule selection.
+
+## Repository Hygiene Milestone
+
+### Approved contracts
+
+- The repository follows the same exact-pinning and validation discipline that
+  generated projects receive.
+- The repository `check` command scans the same categories of source that it
+  tests, so static analysis is not a token step.
+- The generated integration matrix is a single source of truth for case
+  metadata; no second definition may drift from it.
+- The repository release policy in `docs/maintenance.md` is backed by runnable
+  automation rather than documentation alone.
+- `pre-commit` and `devbox run check` stay consistent in what they validate for
+  the repository.
+- The repository exposes the same `check` and `test` split that generated
+  projects receive.
+
+### Remaining work
+
+1. Pin the repository Devbox packages to exact versions and keep them in sync
+   with `template/_versions.jinja`; add a synchronization test.
+2. Make the repository Semgrep scan cover repository Python sources, including
+   the test suite, through a committed `.semgrepignore`.
+3. Add a drift-guard test that the generated integration workflow matrix matches
+   the case definitions in `scripts/generated_integration.py`.
+4. Extend the repository pre-commit hooks to the same checks `devbox run check`
+   runs, pinned to the repository tool versions.
+5. Add a repository release workflow for `v*` tags that validates and publishes
+   the template, matching the documented release policy.
+6. Split the repository `test` command from `check` to mirror generated projects.
+
+## Long-Term Goals
+
+The following are intentionally not active milestones. They remain useful but
+are deferred until capacity or a dependency-update need makes them worthwhile.
+
+- Automated dependency update tooling (Dependabot or Renovate) for repository and
+  generated pins, replacing the fully manual update procedure in
+  `docs/maintenance.md`.
 
 ## Deferred Design Decisions
 

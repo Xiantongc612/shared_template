@@ -7,9 +7,10 @@ An opinionated [Copier](https://copier.readthedocs.io/) template for composing a
 This repository uses Devbox to manage development runtimes and utilities. Install
 [Git](https://git-scm.com/) and [Devbox](https://www.jetify.com/devbox/docs/installing_devbox/),
 then run `devbox run init` to create the Python environment and install the
-pre-commit hook. Run `devbox run check` for fast repository validation.
-Dependency updates, Copier compatibility, and release policy are documented in
-[`docs/maintenance.md`](docs/maintenance.md).
+pre-commit hook. Run `devbox run check` for repository validation and `devbox run
+test` for the unit test suite. The pre-commit hook covers the same fast checks as
+`check`. Dependency updates, Copier compatibility, and release policy are
+documented in [`docs/maintenance.md`](docs/maintenance.md).
 
 Run `devbox run integration` on Linux to render minimal and optional-integration
 variants of every component independently. The suite executes generated checks,
