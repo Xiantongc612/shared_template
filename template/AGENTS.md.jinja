@@ -1,0 +1,75 @@
+# Repository Instructions
+
+## Working Contract
+
+- Read `README.md` before changing component boundaries or artifact behavior.
+- Use the root Devbox commands as the project-wide interface: `devbox run fmt`,
+  `devbox run check`, `devbox run test`, and `devbox run build`.
+{% if frontend_playwright | default(false) or client_playwright | default(false) -%}
+- Run optional browser tests separately with `devbox run test:e2e`.
+{% endif -%}
+- Keep generated components independent. Do not introduce shared source packages,
+  service orchestration, or implicit runtime dependencies without an explicit
+  design decision.
+- Keep validation local. Building artifacts must not deploy services, publish
+  packages, push images, or modify remote resources.
+- Never commit secrets, local environment files, dependency directories, or build
+  outputs.
+
+## Components
+
+{% if 'frontend' in components and frontend_variant == 'react' -%}
+### React Frontend
+
+- Source and tests are under `frontend/`.
+- Use Bun scripts in `frontend/package.json` for component-local work.
+- The production artifact is `frontend/dist/`.
+
+{% elif 'frontend' in components -%}
+### Astro Frontend
+
+- Source is under `frontend/`.
+- Use Bun scripts in `frontend/package.json` for component-local work.
+- No unit-test framework is configured; the root test command reports this when
+  no other selected component has unit tests.
+- The production artifact is `frontend/dist/`.
+
+{% endif -%}
+{% if 'client' in components -%}
+### Tauri Client
+
+- The independent web UI is under `client/src/`; the Rust shell is under
+  `client/src-tauri/`.
+- Validate both ecosystems: Biome and TypeScript for the UI, and rustfmt, Cargo
+  check, Clippy, and Cargo tests for the shell.
+{% if client_playwright -%}
+- Playwright exercises the browser-rendered UI, not the native Tauri shell.
+{% endif -%}
+- Native bundles require host libraries. The generated automation builds Linux
+  AppImage and Debian artifacts only.
+
+{% endif -%}
+{% if 'backend' in components and 'hono' in backend_variants -%}
+### Hono Backend
+
+- The Cloudflare Worker source and tests are under `backend/hono/`.
+- `bun run --cwd backend/hono build` uses Wrangler dry-run mode and must remain a
+  local artifact build rather than a deployment.
+- The production artifact is `backend/hono/dist/`.
+
+{% endif -%}
+{% if 'backend' in components and 'fastapi' in backend_variants -%}
+### FastAPI Backend
+
+- The Python package and tests are under `backend/fastapi/`.
+- Use the component's uv environment for Ruff, ty, pytest, and local development.
+- The production artifact is an OCI archive produced from the component
+  Dockerfile; do not publish it during validation.
+{% endif -%}
+
+## GitHub Automation
+
+- Pull requests and pushes to `main` run separate check, test, and build workflows.
+- A separate end-to-end job is present only when Playwright is selected.
+- Pushing a `v*` tag validates the project and creates a GitHub Release containing
+  selected component artifacts. It does not deploy or publish to external services.
