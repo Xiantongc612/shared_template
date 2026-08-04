@@ -11,11 +11,14 @@ pre-commit hook. Run `devbox run check` for fast repository validation.
 Dependency updates, Copier compatibility, and release policy are documented in
 [`docs/maintenance.md`](docs/maintenance.md).
 
-Run `devbox run integration` on Linux to render each component independently and
-execute its generated initialization, checks, tests, and artifact build. The
-FastAPI case requires Docker Buildx, and the Tauri case requires the Linux system
-libraries listed in the generated build workflow. Focused commands such as
-`devbox run integration:react` validate one component.
+Run `devbox run integration` on Linux to render minimal and optional-integration
+variants of every component independently. The suite executes generated checks,
+tests, applicable Playwright tests, builds, and semantic artifact validation.
+FastAPI cases require Docker Buildx, Tauri cases require the Linux system
+libraries listed in the generated build workflow, and local Playwright setup may
+require host browser libraries. Focused commands such as `devbox run
+integration:react` and `devbox run integration:react-integrations` validate one
+case.
 
 ## Component selection rules
 
@@ -35,10 +38,12 @@ design decisions documented in `PLAN.md`.
 
 - Devbox for development runtimes and utilities
 - Gitleaks for secret scanning
+- actionlint for semantic validation of root and generated GitHub workflows
 - pre-commit for Git hook management
 - Generated root commands for formatting, static checks, unit tests, optional
   end-to-end tests, and local artifact builds
-- Generated GitHub Actions for check, test, build, and tag-triggered GitHub Releases
+- Generated GitHub Actions with immutable action pins, bounded jobs, safe
+  dependency caches, read-only validation, and isolated tag-triggered publication
 - Component-owned OpenTofu and Cloudflare release automation for Hono and Astro
 
 ## Frontend
@@ -73,7 +78,8 @@ The frontend produces provider-neutral static-site artifacts.
 The client produces Tauri desktop application bundles. Generated GitHub automation
 builds Linux AppImage and Debian artifacts; macOS, Windows, and mobile targets are
 deferred. It uses an independent React frontend with the same core frontend
-technologies where applicable.
+technologies where applicable. A validated `client_identifier` answer supplies
+the stable reverse-domain Tauri application identity.
 
 Optional client integrations are selected independently from frontend integrations.
 
@@ -101,3 +107,4 @@ The FastAPI backend produces an OCI-compatible container artifact.
 - Ruff as the linter and formatter
 - ty as the type checker
 - PydanticAI as an optional AI integration
+- Digest-pinned multi-platform uv and Python base images

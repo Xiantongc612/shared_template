@@ -6,9 +6,8 @@
 - Keep components independent. Do not invent a universal generated layout, shared UI package, Docker Compose setup, or service orchestration without an explicit design decision.
 - Treat frontend, client, Hono, and FastAPI as separate generators with component-specific outputs.
 - Do not implement deferred capabilities without an explicit design decision.
-- Cloudflare deployment for Hono and static Astro is approved in `PLAN.md`; keep
-  its infrastructure and releases component-owned rather than introducing shared
-  runtime dependencies.
+- Keep the implemented Cloudflare infrastructure and releases for Hono and static
+  Astro component-owned rather than introducing shared runtime dependencies.
 
 ## Working method
 
@@ -19,7 +18,8 @@
 - Run the narrowest relevant checks during development and the full repository check before completing a milestone.
 - Use `devbox run check` for repository source and render validation. Use the
   relevant `devbox run integration:<component>` command for generated component
-  checks, tests, and artifact builds; `devbox run integration` runs the full suite.
+  checks, tests, and artifact builds. Use the matching `*-integrations` command
+  for optional integrations; `devbox run integration` runs the full suite.
 - Template rendering and local artifact builds are validation. Commands that mutate remote resources are deployments and require explicit user authorization.
 
 ## Copier design rules
@@ -35,6 +35,8 @@
 - Preserve `.copier-answers.yml` compatibility and add update tests before changing existing question names or answer shapes.
 - Keep generated direct dependency declarations exact and do not emit generated
   lockfiles as template output.
+- Keep generated dependency and automation pins in `template/_versions.jinja`;
+  do not expose them as Copier answers or emit the registry into generated output.
 - Keep Astro static for Cloudflare Pages. Do not add the Cloudflare adapter, Pages
   Functions, or server-side rendering as part of the deployment milestone.
 
@@ -53,6 +55,20 @@
   run for pull requests.
 - Release `main` to staging and `v*` tags to production. Preserve GitHub
   environment protection as the approval boundary for production.
+
+## Generated automation design
+
+- Pin external GitHub Actions by full commit SHA with a reviewed version comment,
+  and pin the Devbox installer CLI and checksum.
+- Give validation jobs read-only permissions. Keep write credentials confined to
+  publication or deployment steps and jobs that require them.
+- Give every job an explicit timeout and concurrency policy. Cancel superseded
+  validation, but do not cancel an active publication or deployment.
+- Cache download stores and Docker layers only. Never cache credentials,
+  `node_modules`, virtual environments, Cargo targets, OpenTofu state, or resolved
+  backend configuration.
+- Validate generated workflows with actionlint and validate built artifacts by
+  structure or executable behavior rather than filename existence alone.
 
 ## Secrets and 1Password on Windows
 
