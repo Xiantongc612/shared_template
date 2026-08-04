@@ -72,3 +72,25 @@ def test_repository_pins_semgrep() -> None:
     )
     assert semgrep.split("@", 1)[1] != "latest"
     assert (ROOT / "semgrep.yml").is_file()
+
+
+def test_repository_tooling_versions_match_template(render: Render) -> None:
+    root_devbox = json.loads((ROOT / "devbox.json").read_text())
+    root_packages = {
+        name: version
+        for package in root_devbox["packages"]
+        for name, _, version in (package.partition("@"),)
+    }
+
+    generated = json.loads((render("ToolingSync") / "devbox.json").read_text())[
+        "packages"
+    ]
+    generated_packages = {
+        name: version
+        for package in generated
+        for name, _, version in (package.partition("@"),)
+    }
+
+    shared = root_packages.keys() & generated_packages.keys()
+    assert shared == {"actionlint", "bun", "gitleaks", "pre-commit", "semgrep"}
+    assert all(root_packages[name] == generated_packages[name] for name in shared)
