@@ -4,6 +4,7 @@
   "packages": [
     "actionlint@{{ versions.actionlint }}",
     "gitleaks@{{ versions.gitleaks }}",
+    "semgrep@{{ versions.semgrep }}",
     "pre-commit@{{ versions.pre_commit }}"{% if ('frontend' in components and frontend_variant == 'astro') or ('backend' in components and 'hono' in backend_variants) %},
     "opentofu@{{ versions.opentofu }}"{% endif %}{% if 'frontend' in components or 'client' in components or ('backend' in components and 'hono' in backend_variants) %},
     "bun@{{ versions.bun }}"{% endif %}{% if 'client' in components %},
@@ -35,6 +36,7 @@
       ],
       "check": [
         "gitleaks git",
+        "semgrep scan --config semgrep.yml",
         "actionlint"{% if 'frontend' in components %},
         "bun run --cwd frontend check"{% if frontend_variant == 'astro' %},
         "tofu fmt -check -recursive frontend/infrastructure",

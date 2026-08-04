@@ -36,6 +36,8 @@ def test_root_commands_have_separate_responsibilities(render: Render) -> None:
     packages = json.loads((project / "devbox.json").read_text())["packages"]
     assert "actionlint@1.7.12" in packages
     assert "actionlint" in scripts["check"]
+    assert any(package.startswith("semgrep@") for package in packages)
+    assert "semgrep scan --config semgrep.yml" in scripts["check"]
 
 
 def test_astro_only_test_is_a_successful_noop(render: Render) -> None:

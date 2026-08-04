@@ -71,6 +71,10 @@ def test_generated_direct_dependencies_are_exact_without_lockfiles(
     devbox = json.loads((project / "devbox.json").read_text())
     assert all("@latest" not in package for package in devbox["packages"])
     assert any(package.startswith("python@") for package in devbox["packages"])
+    semgrep = next(
+        package for package in devbox["packages"] if package.startswith("semgrep@")
+    )
+    assert semgrep.split("@", 1)[1] != "latest"
 
     lockfiles = {
         ".terraform.lock.hcl",

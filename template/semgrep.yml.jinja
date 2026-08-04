@@ -1,0 +1,204 @@
+rules:
+  - id: hardcoded-password
+    languages:
+      - python
+    message: >-
+      A hardcoded password or secret was detected. Move secrets to environment
+      variables or a secret store and never commit them.
+    pattern-either:
+      - pattern-regex: (?i)(password|passwd|secret|api_key|apikey|token)\s*=\s*["'][^"']{6,}["']
+      - pattern-regex: (?i)os\.environ\.(get|getenv)\(["'](PASSWORD|PASSWD|SECRET|API_KEY|TOKEN)["']\s*,\s*["'][^"']+["']
+    severity: WARNING
+    metadata:
+      cwe:
+        - "CWE-798: Use of Hard-coded Credentials"
+{% if 'frontend' in components or 'client' in components or ('backend' in components and 'hono' in backend_variants) %}
+  - id: typescript-shell-injection
+    pattern-either:
+      - pattern: child_process.exec($COMMAND)
+      - pattern: child_process.execSync($COMMAND)
+      - pattern: exec($COMMAND)
+      - pattern: execSync($COMMAND)
+      - pattern: >-
+          child_process.spawn($COMMAND, ..., { ..., shell: true, ... })
+      - pattern: >-
+          child_process.execFile($FILE, $ARGS, ..., { ..., shell: true, ... })
+    message: >-
+      Shell execution via exec, execSync, or shell-enabled spawn can introduce
+      command injection when the command includes untrusted input. Pass an
+      argument array without a shell where possible.
+    languages:
+      - typescript
+      - javascript
+    severity: WARNING
+    metadata:
+      cwe:
+        - "CWE-78: Improper Neutralization of Special Elements used in an OS Command ('OS Command Injection')"
+
+  - id: typescript-eval
+    pattern-either:
+      - pattern: eval($CODE)
+      - pattern: new Function($CODE)
+      - pattern: setTimeout($CODE, $DELAY)
+      - pattern: setInterval($CODE, $DELAY)
+    message: >-
+      Dynamic evaluation of strings can execute arbitrary code. Avoid eval,
+      new Function, and string forms of setTimeout or setInterval.
+    languages:
+      - typescript
+      - javascript
+    severity: WARNING
+    metadata:
+      cwe:
+        - "CWE-95: Improper Neutralization of Directives in Dynamically Evaluated Code ('Eval Injection')"
+
+  - id: typescript-dangerous-html
+    pattern-either:
+      - pattern: dangerouslySetInnerHTML={...}
+      - pattern: document.write($HTML)
+      - pattern: innerHTML = $HTML
+    message: >-
+      Injecting raw HTML can enable cross-site scripting when the content
+      includes untrusted input. Use safe rendering and escape user data.
+    languages:
+      - typescript
+      - javascript
+    severity: WARNING
+    metadata:
+      cwe:
+        - "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
+{% endif %}
+{% if 'client' in components %}
+  - id: rust-shell-injection
+    pattern-either:
+      - pattern: Command::new($SHELL).arg("-c").arg($COMMAND)
+      - pattern: Command::new("sh").args(["-c", $COMMAND])
+      - pattern: Command::new("bash").args(["-c", $COMMAND])
+    message: >-
+      Shell execution via sh or bash -c can introduce command injection when the
+      command includes untrusted input. Prefer executing programs directly.
+    languages:
+      - rust
+    severity: WARNING
+    metadata:
+      cwe:
+        - "CWE-78: Improper Neutralization of Special Elements used in an OS Command ('OS Command Injection')"
+
+  - id: rust-insecure-deserialization
+    pattern-either:
+      - pattern: serde_json::from_str::<$T>($INPUT)
+      - pattern: serde_json::from_slice::<$T>($INPUT)
+      - pattern: serde_yaml::from_str::<$T>($INPUT)
+    message: >-
+      Deserializing untrusted structured data can be unsafe. Validate inputs and
+      prefer safe parsers with strict schema enforcement.
+    languages:
+      - rust
+    severity: WARNING
+    metadata:
+      cwe:
+        - "CWE-502: Deserialization of Untrusted Data"
+{% endif %}
+{% if 'backend' in components and 'fastapi' in backend_variants %}
+  - id: python-shell-injection
+    pattern-either:
+      - pattern: subprocess.run($ARGS, ..., shell=True, ...)
+      - pattern: subprocess.Popen($ARGS, ..., shell=True, ...)
+      - pattern: subprocess.call($ARGS, ..., shell=True, ...)
+      - pattern: subprocess.check_call($ARGS, ..., shell=True, ...)
+      - pattern: subprocess.check_output($ARGS, ..., shell=True, ...)
+      - pattern: os.system($COMMAND)
+      - pattern: os.popen($COMMAND)
+      - pattern: os.popen2($COMMAND)
+      - pattern: os.popen3($COMMAND)
+      - pattern: os.popen4($COMMAND)
+    message: >-
+      Shell execution via `shell=True` or os.popen can introduce command
+      injection when the command includes untrusted input. Pass an argument
+      list without `shell=True` instead.
+    languages:
+      - python
+    severity: WARNING
+    metadata:
+      cwe:
+        - "CWE-78: Improper Neutralization of Special Elements used in an OS Command ('OS Command Injection')"
+
+  - id: python-eval-exec
+    pattern-either:
+      - pattern: eval($CODE)
+      - pattern: exec($CODE)
+      - pattern: execfile($FILE)
+    message: >-
+      Dynamic evaluation of strings can execute arbitrary code. Avoid eval,
+      exec, and execfile when the input may be untrusted.
+    languages:
+      - python
+    severity: WARNING
+    metadata:
+      cwe:
+        - "CWE-95: Improper Neutralization of Directives in Dynamically Evaluated Code ('Eval Injection')"
+
+  - id: python-insecure-deserialization
+    pattern-either:
+      - pattern: pickle.load($STREAM)
+      - pattern: pickle.loads($DATA)
+      - pattern: marshal.loads($DATA)
+      - pattern: yaml.load($STREAM)
+      - pattern: yaml.unsafe_load($STREAM)
+    message: >-
+      Deserializing untrusted data with pickle, marshal, or unsafe yaml.load can
+      execute arbitrary code. Use a safe loader or a structured format.
+    languages:
+      - python
+    severity: WARNING
+    metadata:
+      cwe:
+        - "CWE-502: Deserialization of Untrusted Data"
+
+  - id: python-insecure-tempfile
+    pattern: tempfile.mktemp(...)
+    message: >-
+      tempfile.mktemp is vulnerable to race conditions and can be attacked via
+      symlink prediction. Use tempfile.mkstemp or tempfile.TemporaryFile.
+    languages:
+      - python
+    severity: WARNING
+    metadata:
+      cwe:
+        - "CWE-377: Insecure Temporary File"
+
+  - id: python-ssl-verification-disabled
+    pattern-either:
+      - pattern: requests.get($URL, ..., verify=False, ...)
+      - pattern: requests.post($URL, ..., verify=False, ...)
+      - pattern: requests.put($URL, ..., verify=False, ...)
+      - pattern: requests.delete($URL, ..., verify=False, ...)
+      - pattern: urllib3.disable_warnings()
+    message: >-
+      Disabling TLS certificate verification permits man-in-the-middle attacks.
+      Keep verification enabled and pin the trusted certificate authorities.
+    languages:
+      - python
+    severity: WARNING
+    metadata:
+      cwe:
+        - "CWE-295: Improper Certificate Validation"
+{% endif %}
+{% if ('frontend' in components and frontend_variant == 'astro') or ('backend' in components and 'hono' in backend_variants) %}
+  - id: hcl-hardcoded-credentials
+    pattern-either:
+      - pattern: token = "..."
+      - pattern: api_token = "..."
+      - pattern: access_key = "..."
+      - pattern: secret_key = "..."
+      - pattern: account_id = "..."
+    message: >-
+      A hardcoded credential or account identifier was detected in HCL. Supply
+      these values through variables and secret management rather than literals.
+    languages:
+      - hcl
+    severity: WARNING
+    metadata:
+      cwe:
+        - "CWE-798: Use of Hard-coded Credentials"
+{% endif %}

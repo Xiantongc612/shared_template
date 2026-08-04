@@ -75,7 +75,7 @@ rules:
       - pattern: urllib3.disable_warnings()
     message: >-
       Disabling TLS certificate verification permits man-in-the-middle attacks.
-      Keep verification enabled and use a pinned CA bundle if needed.
+      Keep verification enabled and pin the trusted certificate authorities.
     languages:
       - python
     severity: WARNING

@@ -16,6 +16,7 @@ def test_default_render_has_only_react_runtime(render: Render) -> None:
     assert [package.partition("@")[0] for package in devbox["packages"]] == [
         "actionlint",
         "gitleaks",
+        "semgrep",
         "pre-commit",
         "bun",
     ]

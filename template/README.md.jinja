@@ -34,7 +34,9 @@ devbox run build
 ```
 
 `fmt` updates formatting. `check`, `test`, and `build` are separate, non-deploying
-validation stages used by the generated GitHub Actions workflows.
+validation stages used by the generated GitHub Actions workflows. `check` also
+runs Semgrep with the component-aware vendored rules in `semgrep.yml`; the scan
+is fully offline and does not upload results.
 {% if frontend_playwright | default(false) or client_playwright | default(false) %}
 After installing the configured Playwright browsers, run end-to-end tests separately:
 
