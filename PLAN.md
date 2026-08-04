@@ -174,6 +174,51 @@ Implement each generator as its own milestone. Before coding a generator, docume
 - Document release/versioning policy for breaking questionnaire or output changes.
 - Add deployment or orchestration features only after their contracts are explicitly designed and approved.
 
+## Phase 7: Generated project automation
+
+Goal: give every generated project a consistent local and GitHub validation and
+release contract without coupling independently selected components or deploying
+remote resources.
+
+- Generate a root `AGENTS.md` containing common working rules and only the
+  instructions relevant to selected components.
+- Split generated root Devbox commands by responsibility:
+  - `fmt` mutates formatting across every selected component.
+  - `check` performs non-mutating secret, format, lint, type, and static checks.
+  - `test` runs unit tests and succeeds clearly when none are configured.
+  - `test:e2e` is present only when a Playwright integration is selected.
+  - `build` validates local production artifacts without publishing or deploying.
+- Cover every selected ecosystem, including Ruff for FastAPI and rustfmt, Cargo
+  check, Clippy, and Cargo tests for the Tauri Rust shell.
+- Keep component checks, tests, and builds separate rather than having one command
+  invoke another.
+- Generate GitHub Actions workflows for check, test, build, and release:
+  - Run Playwright in a separate conditional end-to-end test job.
+  - Build Tauri artifacts on Linux only; macOS and Windows native bundles require
+    their respective runners and remain outside this phase.
+  - Trigger releases from `v*` tags after validation.
+  - Publish a GitHub Release containing every selected local artifact: static-site
+    archives, Hono Worker bundles, FastAPI OCI archives, and Linux Tauri bundles.
+  - Do not deploy Workers, push container images, publish packages, or target
+    application stores.
+- Preserve component independence and omit commands, workflow steps, packages,
+  documentation, and release artifacts for unselected components.
+- Extend render, deterministic-update, command-contract, workflow-permission, and
+  selected-component absence tests for all generated automation.
+
+Acceptance criteria:
+
+- Every generated project contains a component-aware `AGENTS.md` and exactly four
+  GitHub Actions workflow files.
+- Generated `fmt`, `check`, `test`, and `build` commands have distinct contracts;
+  `test:e2e` is conditional on Playwright.
+- Client projects format, check, lint, and test both their web UI and Rust shell.
+- CI validates generated projects on Linux and grants write permission only to the
+  release workflow.
+- A `v*` tag can create a GitHub Release with all selected artifacts and no remote
+  deployment or registry publication.
+- `devbox run check`, the render matrix, Copier update tests, and pre-commit pass.
+
 ## Out of scope until separately designed
 
 - A universal generated-project directory layout.
