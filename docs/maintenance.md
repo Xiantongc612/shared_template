@@ -4,13 +4,16 @@
 
 Repository Python dependencies are constrained in `pyproject.toml` and resolved
 in `uv.lock`. Devbox packages are resolved in `devbox.lock`. Generated component
-manifests use exact direct dependency versions, while generated Cargo transitive
-dependencies are resolved by Cargo when the client is initialized.
+manifests use exact direct dependency versions and do not include committed
+lockfiles. Initialization creates local Devbox, Bun, and uv lockfiles, while
+Cargo creates its local lockfile on first resolution; generated projects ignore
+these files. Transitive dependency versions remain ecosystem-resolved.
 
 Update one ecosystem at a time:
 
 1. Update the declared version or run the ecosystem's update command.
-2. Refresh only the associated lockfile.
+2. Refresh the repository lockfile when updating repository tooling. Generated
+   dependency updates do not add lockfiles to the template.
 3. Run `devbox run check` and `pre-commit run --all-files`.
 4. Render and build every component affected by the update without deploying or publishing it.
 5. Commit the update separately from behavioral template changes.
