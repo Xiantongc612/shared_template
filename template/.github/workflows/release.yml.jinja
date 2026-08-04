@@ -1,0 +1,78 @@
+---
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install system dependencies
+        run: >-
+          sudo apt-get update && sudo apt-get install -y
+{% if 'client' in components %}
+          libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev
+          libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf libfuse2
+{% else %}
+          tar
+{% endif %}
+      - name: Install Devbox
+        uses: jetify-com/devbox-install-action@v0.13.0
+        with:
+          enable-cache: true
+      - name: Initialize project
+        run: devbox run init
+      - name: Check project
+        run: devbox run check
+      - name: Run unit tests
+        run: devbox run test
+{% if frontend_playwright | default(false) or client_playwright | default(false) %}
+{% if frontend_playwright | default(false) %}
+      - name: Install frontend browser
+        run: bunx --cwd frontend playwright install --with-deps chromium
+{% endif %}
+{% if client_playwright | default(false) %}
+      - name: Install client browser
+        run: bunx --cwd client playwright install --with-deps chromium
+{% endif %}
+      - name: Run end-to-end tests
+        run: devbox run test:e2e
+{% endif %}
+      - name: Build project artifacts
+        run: devbox run build
+{% if 'frontend' in components %}
+      - name: Archive frontend artifact
+        run: tar -czf frontend.tar.gz -C frontend dist
+{% endif %}
+{% if 'backend' in components and 'hono' in backend_variants %}
+      - name: Archive Hono artifact
+        run: tar -czf hono-worker.tar.gz -C backend/hono dist
+{% endif %}
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: {% raw %}${{ github.token }}{% endraw %}
+        run: >-
+          gh release create "$GITHUB_REF_NAME" --generate-notes
+{% if 'frontend' in components %}
+          frontend.tar.gz
+{% endif %}
+{% if 'client' in components %}
+          client/src-tauri/target/release/bundle/deb/*.deb
+          client/src-tauri/target/release/bundle/appimage/*.AppImage
+{% endif %}
+{% if 'backend' in components and 'hono' in backend_variants %}
+          hono-worker.tar.gz
+{% endif %}
+{% if 'backend' in components and 'fastapi' in backend_variants %}
+          backend/fastapi/dist/fastapi-backend.tar
+{% endif %}
