@@ -55,6 +55,8 @@ def test_repository_commands_enforce_uv_lock() -> None:
     assert "uv lock --check" in scripts["check"]
     assert "actionlint" in scripts["check"]
     assert "semgrep scan --config semgrep.yml" in scripts["check"]
+    assert "uv run --locked pytest" in scripts["test"]
+    assert not any("pytest" in command for command in scripts["check"])
     uv_commands = [
         command
         for commands in scripts.values()

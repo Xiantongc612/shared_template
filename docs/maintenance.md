@@ -14,7 +14,7 @@ Update one ecosystem at a time:
 1. Update the declared version or run the ecosystem's update command.
 2. Refresh the repository lockfile when updating repository tooling. Generated
    dependency updates do not add lockfiles to the template.
-3. Run `devbox run check` and `pre-commit run --all-files`.
+3. Run `devbox run check`, `devbox run test`, and `pre-commit run --all-files`.
 4. Render and build every component affected by the update without deploying or publishing it.
 5. Commit the update separately from behavioral template changes.
 
@@ -61,8 +61,9 @@ minimum version.
 ## Generated integration
 
 `devbox run check` validates repository source and deterministic template
-rendering. `devbox run integration` additionally renders React, Astro, Tauri,
-Hono, and FastAPI projects independently, then runs each generated project's
+rendering, and `devbox run test` runs the repository test suite. `devbox run
+integration` additionally renders React, Astro, Tauri, Hono, and FastAPI
+projects independently, then runs each generated project's
 `init`, `check`, `test`, and `build` commands. Focused `integration:<component>`
 commands support local maintenance.
 
