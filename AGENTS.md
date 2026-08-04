@@ -14,7 +14,9 @@
 - Prefer commits in this order when applicable: tooling, questionnaire, shared templates, tests, then one component generator at a time.
 - Do not combine broad formatting, dependency upgrades, generated output, and behavioral changes in one commit.
 - Run the narrowest relevant checks during development and the full repository check before completing a milestone.
-- Use `devbox run check` as the primary local validation command once that script covers all repository checks.
+- Use `devbox run check` for repository source and render validation. Use the
+  relevant `devbox run integration:<component>` command for generated component
+  checks, tests, and artifact builds; `devbox run integration` runs the full suite.
 - Template rendering and local artifact builds are validation. Commands that mutate remote resources are deployments and require explicit user authorization.
 
 ## Copier design rules
@@ -28,6 +30,8 @@
 - Derive fixed artifact types from component choices rather than asking users to select them.
 - Avoid emitting configuration, dependencies, files, or documentation for unselected components.
 - Preserve `.copier-answers.yml` compatibility and add update tests before changing existing question names or answer shapes.
+- Keep generated direct dependency declarations exact and do not emit generated
+  lockfiles as template output.
 
 ## Secrets and 1Password on Windows
 

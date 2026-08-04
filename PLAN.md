@@ -1,29 +1,8 @@
 # Implementation Plan
 
-The repository tooling, Copier questionnaire, shared files, component generators,
-generated project commands, and generated GitHub Actions automation are
-implemented. The following integration and maintenance work remains active.
-
-## Active Milestones
-
-1. Clarify that TanStack Query is available only to React-based frontend and
-   client components, and align the repository Gitleaks hook with the generated
-   project version.
-2. Make every generated direct dependency declaration exact. Generated projects
-   must not rely on committed lockfiles for their initial dependency resolution.
-3. Extend Copier update coverage with a historical answer fixture and an update
-   from a tagged older template revision, while preserving the existing answer
-   names and shapes.
-4. Add repository integration commands that render representative React, Astro,
-   Tauri, Hono, and FastAPI projects and run their native checks, tests, and local
-   artifact builds without deployment.
-5. Run the generated-project integration suite in mainline GitHub Actions. The
-   suite must exercise component-specific outputs rather than introducing a
-   universal generated layout or cross-service orchestration.
-
-The milestones are complete when repository checks, historical Copier updates,
-and generated component validation pass in GitHub Actions. Environment-specific
-artifact limitations must be explicit rather than silently skipped.
+The repository tooling, Copier questionnaire, shared files, update coverage,
+component generators, generated project commands, and GitHub Actions automation
+are implemented. No active implementation milestone remains.
 
 ## Constraints
 
@@ -38,6 +17,8 @@ artifact limitations must be explicit rather than silently skipped.
   compatibility tests and migrations before changing them.
 - Generated direct dependencies use exact versions and generated lockfiles are
   not part of the template output.
+- Mainline CI renders React, Astro, Tauri, Hono, and FastAPI projects independently
+  and runs their generated checks, tests, and local artifact builds.
 - Local checks and artifact builds must not deploy, publish packages, push images,
   or mutate remote resources.
 
