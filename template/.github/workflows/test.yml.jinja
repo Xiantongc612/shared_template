@@ -11,23 +11,54 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: {% raw %}${{ github.workflow }}-${{ github.ref }}{% endraw %}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: {{ versions.ubuntu_runner }}
+    timeout-minutes: 60
     steps:
       - name: Check out repository
-        uses: actions/checkout@{{ versions.checkout_action }}
+        uses: actions/checkout@{{ versions.checkout_action_sha }} # {{ versions.checkout_action }}
+        with:
+          persist-credentials: false
+{% if 'frontend' in components or 'client' in components or ('backend' in components and 'hono' in backend_variants) %}
+      - name: Cache Bun downloads
+        uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
+        with:
+          path: ~/.bun/install/cache
+          key: bun-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.bun }}-{% raw %}${{ hashFiles('**/package.json') }}{% endraw %}
+{% endif %}
 {% if 'client' in components %}
+      - name: Cache Cargo downloads
+        uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.rust }}-{% raw %}${{ hashFiles('client/src-tauri/Cargo.toml') }}{% endraw %}
       - name: Install Tauri system dependencies
         run: >-
           sudo apt-get update && sudo apt-get install -y
           libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev
           libssl-dev libayatana-appindicator3-dev librsvg2-dev
 {% endif %}
+{% if 'backend' in components and 'fastapi' in backend_variants %}
+      - name: Cache uv downloads
+        uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
+        with:
+          path: ~/.cache/uv
+          key: uv-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.python_runtime }}-{{ versions.uv }}-{% raw %}${{ hashFiles('backend/fastapi/pyproject.toml') }}{% endraw %}
+{% endif %}
       - name: Install Devbox
-        uses: jetify-com/devbox-install-action@{{ versions.devbox_action }}
+        uses: jetify-com/devbox-install-action@{{ versions.devbox_action_sha }} # {{ versions.devbox_action }}
         with:
           enable-cache: true
+          devbox-version: {{ versions.devbox_cli }}
+          sha256-checksum: {{ versions.devbox_cli_checksum }}
+          disable-nix-access-token: true
       - name: Initialize project
         run: devbox run init
       - name: Run unit tests
@@ -36,21 +67,35 @@ jobs:
 
   test-e2e:
     runs-on: {{ versions.ubuntu_runner }}
+    timeout-minutes: 60
     steps:
       - name: Check out repository
-        uses: actions/checkout@{{ versions.checkout_action }}
+        uses: actions/checkout@{{ versions.checkout_action_sha }} # {{ versions.checkout_action }}
+        with:
+          persist-credentials: false
+      - name: Cache Bun downloads
+        uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
+        with:
+          path: ~/.bun/install/cache
+          key: bun-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.bun }}-{% raw %}${{ hashFiles('**/package.json') }}{% endraw %}
+      - name: Cache Playwright browsers
+        uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.playwright }}
       - name: Install Devbox
-        uses: jetify-com/devbox-install-action@{{ versions.devbox_action }}
+        uses: jetify-com/devbox-install-action@{{ versions.devbox_action_sha }} # {{ versions.devbox_action }}
         with:
           enable-cache: true
+          devbox-version: {{ versions.devbox_cli }}
+          sha256-checksum: {{ versions.devbox_cli_checksum }}
+          disable-nix-access-token: true
       - name: Initialize project
         run: devbox run init
+      - name: Install Chromium
 {% if frontend_playwright | default(false) %}
-      - name: Install frontend browser
         run: bunx --cwd frontend playwright install --with-deps chromium
-{% endif %}
-{% if client_playwright | default(false) %}
-      - name: Install client browser
+{% else %}
         run: bunx --cwd client playwright install --with-deps chromium
 {% endif %}
       - name: Run end-to-end tests

@@ -15,6 +15,7 @@ permissions:
 jobs:
   deploy:
     runs-on: {{ versions.ubuntu_runner }}
+    timeout-minutes: 60
     environment: {% raw %}${{ startsWith(github.ref, 'refs/tags/v') && 'production' || 'staging' }}{% endraw %}
     concurrency:
       group: cloudflare-{% raw %}${{ startsWith(github.ref, 'refs/tags/v') && 'production' || 'staging' }}{% endraw %}
@@ -24,10 +25,45 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@{{ versions.checkout_action_sha }} # {{ versions.checkout_action }}
+        with:
+          persist-credentials: false
+{% if 'backend' in components and 'fastapi' in backend_variants %}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@{{ versions.buildx_action_sha }} # {{ versions.buildx_action }}
+{% endif %}
+      - name: Cache Bun downloads
+        uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
+        with:
+          path: ~/.bun/install/cache
+          key: bun-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.bun }}-{% raw %}${{ hashFiles('**/package.json') }}{% endraw %}
+{% if 'client' in components %}
+      - name: Cache Cargo downloads
+        uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.rust }}-{% raw %}${{ hashFiles('client/src-tauri/Cargo.toml') }}{% endraw %}
+      - name: Install Tauri system dependencies
+        run: >-
+          sudo apt-get update && sudo apt-get install -y
+          libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev
+          libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf libfuse2
+{% endif %}
+{% if 'backend' in components and 'fastapi' in backend_variants %}
+      - name: Cache uv downloads
+        uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
+        with:
+          path: ~/.cache/uv
+          key: uv-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.python_runtime }}-{{ versions.uv }}-{% raw %}${{ hashFiles('backend/fastapi/pyproject.toml') }}{% endraw %}
+{% endif %}
       - name: Install Devbox
         uses: jetify-com/devbox-install-action@{{ versions.devbox_action_sha }} # {{ versions.devbox_action }}
         with:
           enable-cache: true
+          devbox-version: {{ versions.devbox_cli }}
+          sha256-checksum: {{ versions.devbox_cli_checksum }}
+          disable-nix-access-token: true
       - name: Initialize project
         run: devbox run init
 {% if 'backend' in components and 'hono' in backend_variants %}
@@ -39,7 +75,7 @@ jobs:
           AWS_REGION: auto
           R2_STATE_BUCKET: {% raw %}${{ secrets.R2_STATE_BUCKET }}{% endraw %}
         run: >-
-          tofu -chdir=backend/hono/infrastructure/environments/$DEPLOYMENT_ENV init
+          tofu -chdir=backend/hono/infrastructure/environments/"$DEPLOYMENT_ENV" init
           -backend-config="bucket=$R2_STATE_BUCKET"
           -backend-config="key=hono.tfstate"
           -backend-config="region=auto"
@@ -57,7 +93,7 @@ jobs:
           AWS_REGION: auto
           CLOUDFLARE_API_TOKEN: {% raw %}${{ secrets.CLOUDFLARE_API_TOKEN }}{% endraw %}
           TF_VAR_cloudflare_account_id: {% raw %}${{ secrets.CLOUDFLARE_ACCOUNT_ID }}{% endraw %}
-        run: tofu -chdir=backend/hono/infrastructure/environments/$DEPLOYMENT_ENV apply -auto-approve
+        run: tofu -chdir=backend/hono/infrastructure/environments/"$DEPLOYMENT_ENV" apply -auto-approve
 {% endif %}
 {% if 'frontend' in components and frontend_variant == 'astro' %}
       - name: Apply Astro infrastructure
@@ -68,7 +104,7 @@ jobs:
           AWS_REGION: auto
           R2_STATE_BUCKET: {% raw %}${{ secrets.R2_STATE_BUCKET }}{% endraw %}
         run: >-
-          tofu -chdir=frontend/infrastructure/environments/$DEPLOYMENT_ENV init
+          tofu -chdir=frontend/infrastructure/environments/"$DEPLOYMENT_ENV" init
           -backend-config="bucket=$R2_STATE_BUCKET"
           -backend-config="key=astro.tfstate"
           -backend-config="region=auto"
@@ -86,21 +122,25 @@ jobs:
           AWS_REGION: auto
           CLOUDFLARE_API_TOKEN: {% raw %}${{ secrets.CLOUDFLARE_API_TOKEN }}{% endraw %}
           TF_VAR_cloudflare_account_id: {% raw %}${{ secrets.CLOUDFLARE_ACCOUNT_ID }}{% endraw %}
-        run: tofu -chdir=frontend/infrastructure/environments/$DEPLOYMENT_ENV apply -auto-approve
+        run: tofu -chdir=frontend/infrastructure/environments/"$DEPLOYMENT_ENV" apply -auto-approve
 {% endif %}
       - name: Build project artifacts
+{% if 'backend' in components and 'fastapi' in backend_variants %}
+        env:
+          DOCKER_CACHE_ARGS: --cache-from type=gha,scope=fastapi --cache-to type=gha,mode=max,scope=fastapi
+{% endif %}
         run: devbox run build
 {% if 'backend' in components and 'hono' in backend_variants %}
       - name: Release Hono Worker
         env:
           CLOUDFLARE_ACCOUNT_ID: {% raw %}${{ secrets.CLOUDFLARE_ACCOUNT_ID }}{% endraw %}
           CLOUDFLARE_API_TOKEN: {% raw %}${{ secrets.CLOUDFLARE_API_TOKEN }}{% endraw %}
-        run: bun run --cwd backend/hono release:$DEPLOYMENT_ENV
+        run: bun run --cwd backend/hono release:"$DEPLOYMENT_ENV"
 {% endif %}
 {% if 'frontend' in components and frontend_variant == 'astro' %}
       - name: Release Astro site
         env:
           CLOUDFLARE_ACCOUNT_ID: {% raw %}${{ secrets.CLOUDFLARE_ACCOUNT_ID }}{% endraw %}
           CLOUDFLARE_API_TOKEN: {% raw %}${{ secrets.CLOUDFLARE_API_TOKEN }}{% endraw %}
-        run: bun run --cwd frontend release:$DEPLOYMENT_ENV -- --commit-hash "$GITHUB_SHA"
+        run: bun run --cwd frontend release:"$DEPLOYMENT_ENV" -- --commit-hash "$GITHUB_SHA"
 {% endif %}

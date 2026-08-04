@@ -2,6 +2,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/{{ versions.devbox_schema }}/.schema/devbox.schema.json",
   "packages": [
+    "actionlint@{{ versions.actionlint }}",
     "gitleaks@{{ versions.gitleaks }}",
     "pre-commit@{{ versions.pre_commit }}"{% if ('frontend' in components and frontend_variant == 'astro') or ('backend' in components and 'hono' in backend_variants) %},
     "opentofu@{{ versions.opentofu }}"{% endif %}{% if 'frontend' in components or 'client' in components or ('backend' in components and 'hono' in backend_variants) %},
@@ -33,7 +34,8 @@
         "uv run --project backend/fastapi ruff format backend/fastapi"{% endif %}
       ],
       "check": [
-        "gitleaks git"{% if 'frontend' in components %},
+        "gitleaks git",
+        "actionlint"{% if 'frontend' in components %},
         "bun run --cwd frontend check"{% if frontend_variant == 'astro' %},
         "tofu fmt -check -recursive frontend/infrastructure",
         "tofu -chdir=frontend/infrastructure/environments/staging init -backend=false",
@@ -71,7 +73,7 @@
         "bun run --cwd client tauri build --bundles deb,appimage"{% if 'backend' in components and ('hono' in backend_variants or 'fastapi' in backend_variants) %},{% endif %}{% endif %}{% if 'backend' in components and 'hono' in backend_variants %}
         "bun run --cwd backend/hono build"{% if 'fastapi' in backend_variants %},{% endif %}{% endif %}{% if 'backend' in components and 'fastapi' in backend_variants %}
         "mkdir -p backend/fastapi/dist",
-        "docker buildx build --output type=oci,dest=backend/fastapi/dist/fastapi-backend.tar backend/fastapi"{% endif %}
+        "docker buildx build ${DOCKER_CACHE_ARGS:-} --output type=oci,dest=backend/fastapi/dist/fastapi-backend.tar backend/fastapi"{% endif %}
       ]
     }
   }

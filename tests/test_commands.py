@@ -28,7 +28,14 @@ def test_root_commands_have_separate_responsibilities(render: Render) -> None:
     assert any("cargo clippy" in command for command in scripts["check"])
     assert any("cargo test" in command for command in scripts["test"])
     assert len(scripts["test:e2e"]) == 2
-    assert any("docker buildx build" in command for command in scripts["build"])
+    docker_build = next(
+        command for command in scripts["build"] if "docker buildx build" in command
+    )
+    assert "${DOCKER_CACHE_ARGS:-}" in docker_build
+
+    packages = json.loads((project / "devbox.json").read_text())["packages"]
+    assert "actionlint@1.7.12" in packages
+    assert "actionlint" in scripts["check"]
 
 
 def test_astro_only_test_is_a_successful_noop(render: Render) -> None:

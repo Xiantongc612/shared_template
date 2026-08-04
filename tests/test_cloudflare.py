@@ -80,6 +80,8 @@ def test_cloudflare_workflow_is_explicit_and_environment_scoped(render: Render) 
 
     assert "pull_request:" not in workflow
     assert "contents: read" in workflow
+    assert job["runs-on"] == "ubuntu-22.04"
+    assert job["timeout-minutes"] == 60
     assert "environment: ${{ startsWith" in workflow
     assert "R2_ACCESS_KEY_ID" in workflow
     assert "R2_SECRET_ACCESS_KEY" in workflow
@@ -96,6 +98,13 @@ def test_cloudflare_workflow_is_explicit_and_environment_scoped(render: Render) 
         r"jetify-com/devbox-install-action@[0-9a-f]{40}",
         steps["Install Devbox"]["uses"],
     )
+    assert steps["Check out repository"]["with"]["persist-credentials"] is False
+    assert steps["Install Devbox"]["with"] == {
+        "enable-cache": True,
+        "devbox-version": "0.17.5",
+        "sha256-checksum": "eb2d8fb34266ba3befc294d7d6f56e2cd4da2cacb7a0cf52db5b8092575544f8",
+        "disable-nix-access-token": True,
+    }
     assert "env" not in steps["Initialize project"]
     assert "env" not in steps["Build project artifacts"]
     assert steps["Apply Hono infrastructure"]["env"].keys() >= {

@@ -14,6 +14,7 @@ def test_default_render_has_only_react_runtime(render: Render) -> None:
     answers = yaml.safe_load((project / ".copier-answers.yml").read_text())
 
     assert [package.partition("@")[0] for package in devbox["packages"]] == [
+        "actionlint",
         "gitleaks",
         "pre-commit",
         "bun",
