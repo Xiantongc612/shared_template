@@ -5,7 +5,6 @@ import subprocess
 import tomllib
 from collections.abc import Mapping
 from pathlib import Path
-from shutil import copy2, copytree, rmtree
 from typing import Any
 
 import pytest
@@ -22,6 +21,9 @@ SHARED_FILES = {
     "devbox.json",
 }
 WORKFLOW_FILES = {"build.yml", "check.yml", "release.yml", "test.yml"}
+HISTORICAL_ANSWERS = ROOT / "tests" / "fixtures" / "answers-v0.1.0.yml"
+HISTORICAL_TEMPLATE_COMMIT = "b3806641460b9f1b7d15a6c7987a0879c8dfd936"
+HISTORICAL_TEMPLATE_TAG = "v0.1.0"
 
 
 @pytest.mark.parametrize(
@@ -624,44 +626,45 @@ def test_rendering_is_deterministic(render: Render) -> None:
     assert first_files == second_files
 
 
-def test_copier_update_preserves_answers(tmp_path: Path) -> None:
+def test_copier_updates_historical_answers_from_tag(tmp_path: Path) -> None:
     source = tmp_path / "versioned-template"
-    source.mkdir()
-    copy2(ROOT / "copier.yml", source)
-    copytree(ROOT / "template", source / "template")
-    (source / "template" / "AGENTS.md.jinja").unlink()
-    rmtree(source / "template" / ".github")
-    _git(source, "init")
-    _git(source, "add", ".")
-    _git(source, "commit", "-m", "initial template")
-    _git(source, "tag", "v1.0.0")
+    _git(tmp_path, "clone", "--quiet", str(ROOT), str(source))
+    _git(source, "tag", HISTORICAL_TEMPLATE_TAG, HISTORICAL_TEMPLATE_COMMIT)
+    historical_answers: dict[str, Any] = yaml.safe_load(HISTORICAL_ANSWERS.read_text())
 
     project = tmp_path / "project"
     run_copy(
         str(source),
         project,
-        data={"project_name": "Updated"},
+        data=historical_answers,
+        vcs_ref=HISTORICAL_TEMPLATE_TAG,
         defaults=True,
         quiet=True,
     )
+
+    recorded_answers = yaml.safe_load((project / ".copier-answers.yml").read_text())
+    assert {
+        key: value for key, value in recorded_answers.items() if not key.startswith("_")
+    } == historical_answers
+    assert not (project / "AGENTS.md").exists()
+    assert not (project / ".github").exists()
+
     _git(project, "init")
     _git(project, "add", ".")
-    _git(project, "commit", "-m", "generated project")
+    _git(project, "commit", "-m", "generated from v0.1.0")
 
-    copy2(ROOT / "template" / "AGENTS.md.jinja", source / "template")
-    copytree(ROOT / "template" / ".github", source / "template" / ".github")
-    readme_template = source / "template" / "README.md.jinja"
-    readme_template.write_text(readme_template.read_text() + "\nUpdate marker.\n")
-    _git(source, "add", ".")
-    _git(source, "commit", "-m", "update template")
-    _git(source, "tag", "v1.1.0")
+    run_update(
+        project,
+        vcs_ref="HEAD",
+        defaults=True,
+        overwrite=True,
+        quiet=True,
+    )
 
-    run_update(project, defaults=True, overwrite=True, quiet=True)
-
-    assert "Update marker." in (project / "README.md").read_text()
-    answers = yaml.safe_load((project / ".copier-answers.yml").read_text())
-    assert answers["project_name"] == "Updated"
-    assert answers["components"] == ["frontend"]
+    updated_answers = yaml.safe_load((project / ".copier-answers.yml").read_text())
+    assert {
+        key: value for key, value in updated_answers.items() if not key.startswith("_")
+    } == historical_answers
     assert (project / "AGENTS.md").is_file()
     assert WORKFLOW_FILES == {
         path.name for path in (project / ".github" / "workflows").iterdir()

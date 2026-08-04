@@ -1,0 +1,20 @@
+---
+project_name: HistoricalUpdate
+components:
+  - frontend
+  - client
+  - backend
+frontend_variant: react
+backend_variants:
+  - hono
+  - fastapi
+frontend_playwright: true
+frontend_ai_sdk: false
+frontend_tanstack_query: true
+frontend_i18next: false
+client_playwright: false
+client_ai_sdk: true
+client_tanstack_query: false
+client_i18next: true
+hono_ai_sdk: true
+fastapi_pydantic_ai: false
