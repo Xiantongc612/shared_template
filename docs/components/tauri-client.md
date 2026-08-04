@@ -15,6 +15,8 @@
 The client owns its React/Vite UI in `client/src` and its Rust Tauri shell in
 `client/src-tauri`. It does not import the selected web frontend. Optional
 client integrations are rendered independently from frontend integrations.
+The `client_identifier` Copier answer supplies the lowercase reverse-domain
+application identifier in `tauri.conf.json`.
 
 Only desktop targets are generated. A native bundle requires the platform's
 Tauri prerequisites. Generated automation installs WebKitGTK 4.1, GTK 3, and
@@ -24,4 +26,5 @@ the generated workflows.
 
 `devbox run init` derives platform icon files under `client/src-tauri/icons/`
 from the managed `client/src-tauri/app-icon.svg`. Replace that source artwork and
-remove the generated icon directory to regenerate customized icons.
+remove at least one configured icon to regenerate an incomplete set. A complete
+set is left unchanged.

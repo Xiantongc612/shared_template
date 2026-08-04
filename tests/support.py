@@ -15,9 +15,8 @@ SHARED_FILES = {
     "devbox.json",
 }
 WORKFLOW_FILES = {"build.yml", "check.yml", "release.yml", "test.yml"}
-HISTORICAL_ANSWERS = ROOT / "tests" / "fixtures" / "answers-v0.1.0.yml"
+HISTORICAL_ANSWERS = ROOT / "tests" / "fixtures" / "historical-answers.yml"
 HISTORICAL_TEMPLATE_COMMIT = "b3806641460b9f1b7d15a6c7987a0879c8dfd936"
-HISTORICAL_TEMPLATE_TAG = "v0.1.0"
 
 
 class Render(Protocol):

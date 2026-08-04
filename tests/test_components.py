@@ -2,6 +2,22 @@ import json
 
 from support import Render
 
+TAURI_ICONS = [
+    "icons/32x32.png",
+    "icons/128x128.png",
+    "icons/128x128@2x.png",
+    "icons/icon.icns",
+    "icons/icon.ico",
+]
+TAURI_ICON_INIT_COMMAND = (
+    "test -f client/src-tauri/icons/32x32.png && "
+    "test -f client/src-tauri/icons/128x128.png && "
+    "test -f client/src-tauri/icons/128x128@2x.png && "
+    "test -f client/src-tauri/icons/icon.icns && "
+    "test -f client/src-tauri/icons/icon.ico || "
+    "bun run --cwd client tauri icon src-tauri/app-icon.svg"
+)
+
 
 def test_generated_agents_only_describes_selected_components(render: Render) -> None:
     project = render(
@@ -113,14 +129,16 @@ def test_client_generator_is_independent(render: Render) -> None:
     assert "@tanstack/react-query" in package["dependencies"]
     assert "i18next" in package["dependencies"]
     devbox = json.loads((project / "devbox.json").read_text())
-    assert any(
-        "tauri icon src-tauri/app-icon.svg" in command
+    icon_commands = [
+        command
         for command in devbox["shell"]["scripts"]["init"]
-    )
+        if "tauri icon" in command
+    ]
+    assert icon_commands == [TAURI_ICON_INIT_COMMAND]
+    assert "icon.png" not in icon_commands[0]
     assert (client / "src-tauri" / "app-icon.svg").is_file()
     tauri_config = json.loads((client / "src-tauri" / "tauri.conf.json").read_text())
-    assert "icons/32x32.png" in tauri_config["bundle"]["icon"]
-    assert "icons/icon.ico" in tauri_config["bundle"]["icon"]
+    assert tauri_config["bundle"]["icon"] == TAURI_ICONS
     assert (client / "src-tauri" / "src" / "lib.rs").is_file()
     assert not (project / "frontend").exists()
 

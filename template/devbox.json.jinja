@@ -19,7 +19,7 @@
         "pre-commit install"{% if 'frontend' in components %},
         "bun install --cwd frontend"{% endif %}{% if 'client' in components %},
         "bun install --cwd client",
-        "test -f client/src-tauri/icons/icon.png || bun run --cwd client tauri icon src-tauri/app-icon.svg"{% endif %}{% if 'backend' in components and 'hono' in backend_variants %},
+        "test -f client/src-tauri/icons/32x32.png && test -f client/src-tauri/icons/128x128.png && test -f client/src-tauri/icons/128x128@2x.png && test -f client/src-tauri/icons/icon.icns && test -f client/src-tauri/icons/icon.ico || bun run --cwd client tauri icon src-tauri/app-icon.svg"{% endif %}{% if 'backend' in components and 'hono' in backend_variants %},
         "bun install --cwd backend/hono"{% endif %}{% if 'backend' in components and 'fastapi' in backend_variants %},
         "uv sync --project backend/fastapi"{% endif %}
       ],

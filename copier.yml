@@ -67,6 +67,20 @@ cloudflare_project_id:
     and must start and end with a letter or number.
     {% endif %}
 
+client_identifier:
+  type: str
+  help: Lowercase reverse-domain identifier for the Tauri application.
+  default: >-
+    {%- set slug = project_name | lower | regex_replace('[^a-z0-9]+', '-') | regex_replace('^-+|-+$', '') -%}
+    {{- 'com.example.' ~ ((slug[:243] | regex_replace('-+$', '')) or 'app') -}}
+  when: "{{ 'client' in components }}"
+  validator: >-
+    {% if client_identifier | length > 255 or not (client_identifier | regex_search('^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:[.][a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+\\Z')) %}
+    Client identifier must be at most 255 characters and use lowercase
+    reverse-domain notation with at least two alphanumeric or hyphenated labels;
+    labels must not start or end with a hyphen.
+    {% endif %}
+
 frontend_playwright:
   type: bool
   help: Add Playwright end-to-end testing to the frontend.

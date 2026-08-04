@@ -66,6 +66,38 @@ def test_default_render_has_only_react_runtime(render: Render) -> None:
             },
             "Cloudflare project ID must use 1-46 lowercase letters",
         ),
+        (
+            {
+                "project_name": "Invalid",
+                "components": ["client"],
+                "client_identifier": "Com.example.app",
+            },
+            "Client identifier must be at most 255 characters",
+        ),
+        (
+            {
+                "project_name": "Invalid",
+                "components": ["client"],
+                "client_identifier": "localhost",
+            },
+            "Client identifier must be at most 255 characters",
+        ),
+        (
+            {
+                "project_name": "Invalid",
+                "components": ["client"],
+                "client_identifier": "com.example.-app",
+            },
+            "Client identifier must be at most 255 characters",
+        ),
+        (
+            {
+                "project_name": "Invalid",
+                "components": ["client"],
+                "client_identifier": "com.example." + "a" * 244,
+            },
+            "Client identifier must be at most 255 characters",
+        ),
     ],
 )
 def test_invalid_answers_are_rejected(
@@ -111,3 +143,54 @@ def test_frontend_and_client_answers_are_independent(render: Render) -> None:
     assert "Client: AI SDK" not in readme
     assert answers["frontend_ai_sdk"] is True
     assert answers["client_ai_sdk"] is False
+
+
+@pytest.mark.parametrize(
+    ("project_name", "expected_identifier"),
+    [
+        ("Desktop App!", "com.example.desktop-app"),
+        ("!!!", "com.example.app"),
+        ("a" * 300, "com.example." + "a" * 243),
+        ("a" * 242 + "-remaining", "com.example." + "a" * 242),
+    ],
+)
+def test_client_identifier_default_is_safe(
+    render: Render, project_name: str, expected_identifier: str
+) -> None:
+    project = render(
+        "ClientIdentifier",
+        {"project_name": project_name, "components": ["client"]},
+    )
+    answers = yaml.safe_load((project / ".copier-answers.yml").read_text())
+    tauri_config = json.loads(
+        (project / "client" / "src-tauri" / "tauri.conf.json").read_text()
+    )
+
+    assert answers["client_identifier"] == expected_identifier
+    assert tauri_config["identifier"] == expected_identifier
+    assert len(expected_identifier) <= 255
+
+
+def test_custom_client_identifier_is_rendered(render: Render) -> None:
+    project = render(
+        "CustomIdentifier",
+        {
+            "components": ["client"],
+            "client_identifier": "io.example.desktop-app",
+        },
+    )
+    answers = yaml.safe_load((project / ".copier-answers.yml").read_text())
+    tauri_config = json.loads(
+        (project / "client" / "src-tauri" / "tauri.conf.json").read_text()
+    )
+
+    assert answers["client_identifier"] == "io.example.desktop-app"
+    assert tauri_config["identifier"] == "io.example.desktop-app"
+
+
+def test_unselected_client_omits_identifier(render: Render) -> None:
+    project = render("NoClient")
+    answers = yaml.safe_load((project / ".copier-answers.yml").read_text())
+
+    assert "client_identifier" not in answers
+    assert not (project / "client").exists()
