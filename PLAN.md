@@ -48,21 +48,25 @@ projects.
 - No SonarQube or SonarCloud scanner is introduced because analysis upload and
   server interaction are outside the local, offline `check` contract.
 
-### Remaining work
+### Implemented scope
 
-1. Pin Semgrep in the repository Devbox packages and add the Semgrep scan step to
-   the repository `check` command.
-2. Add the repository `semgrep.yml` rule file with a Python and generic-security
-   rule set that excludes Jinja templates.
-3. Add a Semgrep pin to `template/_versions.jinja` and a generated
-   `semgrep.yml.jinja` template with component-aware rules.
-4. Add the Semgrep scan step to the generated `check` command and the Semgrep
-   package to the generated Devbox packages.
-5. Document Semgrep in the shared tooling lists of the repository and generated
-   README files, and record the rule-refresh procedure in `docs/maintenance.md`.
-6. Add tests covering the root and generated pins, the component-aware generated
-   rule file, and the presence of the Semgrep step in root and generated `check`
-   commands.
+- The repository Devbox environment pins Semgrep 1.164.0 and the repository
+  `check` command runs `semgrep scan --config semgrep.yml`.
+- The committed `semgrep.yml` provides a Python and generic-security rule set;
+  Jinja templates are not scanned because Semgrep cannot parse them.
+- `template/_versions.jinja` pins the generated Semgrep version, and the
+  generated `semgrep.yml.jinja` emits component-aware rules: TypeScript and
+  JavaScript for the React frontend, Tauri client, and Hono backend; Rust for
+  the Tauri client; Python for FastAPI; and HCL for Astro and Hono OpenTofu
+  infrastructure.
+- Generated Devbox packages include Semgrep and the generated `check` command
+  runs `semgrep scan --config semgrep.yml` with the vendored rules.
+- Repository and generated README files list Semgrep as shared tooling, and
+  `docs/maintenance.md` documents the Semgrep pin locations and the rule-refresh
+  procedure.
+- Tests cover the root and generated pins, generated config validity, the
+  presence of the Semgrep step in root and generated `check` commands, and
+  component-aware rule selection.
 
 ## Deferred Design Decisions
 
