@@ -1,16 +1,11 @@
 from collections.abc import Mapping
 from pathlib import Path
 from shutil import copy2, copytree
-from typing import Any, Protocol
+from typing import Any
 
 import pytest
 from copier import run_copy
-
-ROOT = Path(__file__).parents[1]
-
-
-class Render(Protocol):
-    def __call__(self, name: str, answers: Mapping[str, Any] | None = None) -> Path: ...
+from support import ROOT, Render
 
 
 @pytest.fixture
