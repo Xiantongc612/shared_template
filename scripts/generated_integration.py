@@ -64,6 +64,7 @@ def validate(case: str, source: Path, workspace: Path) -> None:
     )
 
     environment = os.environ.copy()
+    environment.pop("VIRTUAL_ENV", None)
     if case == "tauri":
         environment["APPIMAGE_EXTRACT_AND_RUN"] = "1"
 
