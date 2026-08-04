@@ -19,6 +19,24 @@
         "uv run ruff format --check .",
         "uv run ty check",
         "uv run pytest"
+      ],
+      "integration": [
+        "uv run python scripts/generated_integration.py all"
+      ],
+      "integration:react": [
+        "uv run python scripts/generated_integration.py react"
+      ],
+      "integration:astro": [
+        "uv run python scripts/generated_integration.py astro"
+      ],
+      "integration:tauri": [
+        "uv run python scripts/generated_integration.py tauri"
+      ],
+      "integration:hono": [
+        "uv run python scripts/generated_integration.py hono"
+      ],
+      "integration:fastapi": [
+        "uv run python scripts/generated_integration.py fastapi"
       ]
     }
   }
