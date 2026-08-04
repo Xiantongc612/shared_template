@@ -20,8 +20,8 @@ Update one ecosystem at a time:
 
 Use `devbox update <package>` for repository Devbox packages and `uv lock
 --upgrade-package <package>` for one repository Python dependency. Generated
-JavaScript and Python versions are updated directly in their component template
-and validated through the render matrix plus a local artifact build.
+dependency and tool versions are updated in `template/_versions.jinja` and
+validated through the render matrix plus a local artifact build.
 
 ## Copier compatibility
 

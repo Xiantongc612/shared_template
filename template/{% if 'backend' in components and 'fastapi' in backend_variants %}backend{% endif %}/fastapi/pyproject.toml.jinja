@@ -1,19 +1,20 @@
+{% from "template/_versions.jinja" import versions -%}
 [project]
 name = "fastapi-backend"
-version = "0.1.0"
-requires-python = ">=3.14"
+version = "{{ versions.project }}"
+requires-python = ">={{ versions.python }}"
 dependencies = [
-    "fastapi==0.141.1",
-    "uvicorn==0.52.1",
-{% if fastapi_pydantic_ai %}    "pydantic-ai==2.22.0",
+    "fastapi=={{ versions.fastapi }}",
+    "uvicorn=={{ versions.uvicorn }}",
+{% if fastapi_pydantic_ai %}    "pydantic-ai=={{ versions.pydantic_ai }}",
 {% endif %}]
 
 [dependency-groups]
 dev = [
-    "httpx2==2.9.1",
-    "pytest==9.1.1",
-    "ruff==0.16.1",
-    "ty==0.0.65",
+    "httpx2=={{ versions.httpx2 }}",
+    "pytest=={{ versions.pytest }}",
+    "ruff=={{ versions.ruff }}",
+    "ty=={{ versions.ty }}",
 ]
 
 [tool.uv]
@@ -24,7 +25,7 @@ pythonpath = ["."]
 testpaths = ["tests"]
 
 [tool.ruff]
-target-version = "py314"
+target-version = "py{{ versions.python | replace('.', '') }}"
 
 [tool.ty.environment]
-python-version = "3.14"
+python-version = "{{ versions.python }}"

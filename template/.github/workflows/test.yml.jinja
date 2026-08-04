@@ -1,3 +1,4 @@
+{% from "template/_versions.jinja" import versions -%}
 ---
 name: Test
 
@@ -12,10 +13,10 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-22.04
+    runs-on: {{ versions.ubuntu_runner }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@{{ versions.checkout_action }}
 {% if 'client' in components %}
       - name: Install Tauri system dependencies
         run: >-
@@ -24,7 +25,7 @@ jobs:
           libssl-dev libayatana-appindicator3-dev librsvg2-dev
 {% endif %}
       - name: Install Devbox
-        uses: jetify-com/devbox-install-action@v0.13.0
+        uses: jetify-com/devbox-install-action@{{ versions.devbox_action }}
         with:
           enable-cache: true
       - name: Initialize project
@@ -34,12 +35,12 @@ jobs:
 {% if frontend_playwright | default(false) or client_playwright | default(false) %}
 
   test-e2e:
-    runs-on: ubuntu-22.04
+    runs-on: {{ versions.ubuntu_runner }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@{{ versions.checkout_action }}
       - name: Install Devbox
-        uses: jetify-com/devbox-install-action@v0.13.0
+        uses: jetify-com/devbox-install-action@{{ versions.devbox_action }}
         with:
           enable-cache: true
       - name: Initialize project

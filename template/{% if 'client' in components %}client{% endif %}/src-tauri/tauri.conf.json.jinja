@@ -1,7 +1,8 @@
+{% from "template/_versions.jinja" import versions -%}
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": {{ project_name | tojson }},
-  "version": "0.1.0",
+  "version": "{{ versions.project }}",
   "identifier": "com.example.desktop-client",
   "build": {
     "beforeDevCommand": "bun run dev",

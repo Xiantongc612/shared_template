@@ -13,10 +13,10 @@ def test_default_render_has_only_react_runtime(render: Render) -> None:
     devbox = json.loads((project / "devbox.json").read_text())
     answers = yaml.safe_load((project / ".copier-answers.yml").read_text())
 
-    assert devbox["packages"] == [
-        "gitleaks@8.30.1",
-        "pre-commit@4.5.1",
-        "bun@1.3.13",
+    assert [package.partition("@")[0] for package in devbox["packages"]] == [
+        "gitleaks",
+        "pre-commit",
+        "bun",
     ]
     assert answers["components"] == ["frontend"]
     assert answers["frontend_variant"] == "react"

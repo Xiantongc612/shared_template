@@ -3,6 +3,8 @@ _min_copier_version: "9.17.0"
 _subdirectory: template
 _exclude:
   - .gitkeep
+  - _versions.jinja
+  - _versions
 
 project_name:
   type: str

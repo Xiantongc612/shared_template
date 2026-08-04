@@ -1,4 +1,5 @@
 import json
+import re
 
 import pytest
 import yaml
@@ -33,29 +34,30 @@ def test_cloudflare_infrastructure_is_component_owned(render: Render) -> None:
 
     astro_package = json.loads((astro / "frontend" / "package.json").read_text())
     hono_package = json.loads((hono / "backend" / "hono" / "package.json").read_text())
-    assert astro_package["devDependencies"]["wrangler"] == "4.118.0"
+    assert (
+        astro_package["devDependencies"]["wrangler"]
+        == hono_package["devDependencies"]["wrangler"]
+    )
     assert "versions upload --env staging" in hono_package["scripts"]["release:staging"]
-    assert (
-        "opentofu@1.12.5" in json.loads((astro / "devbox.json").read_text())["packages"]
+    devbox_packages = json.loads((astro / "devbox.json").read_text())["packages"]
+    opentofu_version = next(
+        package.partition("@")[2]
+        for package in devbox_packages
+        if package.startswith("opentofu@")
     )
-    assert (
-        '= 5.22.0"'
-        in (
-            astro / "frontend" / "infrastructure" / "modules" / "pages" / "main.tf"
-        ).read_text()
-    )
-    assert (
-        '= 5.22.0"'
-        in (
-            hono
-            / "backend"
-            / "hono"
-            / "infrastructure"
-            / "modules"
-            / "worker"
-            / "main.tf"
-        ).read_text()
-    )
+    terraform_versions: set[str] = set()
+    provider_versions: set[str] = set()
+    for rendered_project in (astro, hono):
+        for path in rendered_project.rglob("*.tf"):
+            text = path.read_text()
+            terraform_versions.update(
+                re.findall(r'required_version = "= ([^"]+)"', text)
+            )
+            provider_versions.update(
+                re.findall(r'^\s+version = "= ([^"]+)"', text, re.MULTILINE)
+            )
+    assert terraform_versions == {opentofu_version}
+    assert len(provider_versions) == 1
     assert 'output: "static"' in (astro / "frontend" / "astro.config.mjs").read_text()
     assert not (astro / "backend").exists()
     assert not (hono / "frontend").exists()
@@ -86,11 +88,13 @@ def test_cloudflare_workflow_is_explicit_and_environment_scoped(render: Render) 
     assert workflow.index("apply -auto-approve") < workflow.index("Release Hono Worker")
     assert "devbox run build" in workflow
     assert job["env"].keys() == {"DEPLOYMENT_ENV"}
-    assert steps["Check out repository"]["uses"].startswith(
-        "actions/checkout@11d5960a326750d5838078e36cf38b85af677262"
+    assert re.fullmatch(
+        r"actions/checkout@[0-9a-f]{40}",
+        steps["Check out repository"]["uses"],
     )
-    assert steps["Install Devbox"]["uses"].startswith(
-        "jetify-com/devbox-install-action@22b0f5500b14df4ea357ce673fbd4ced940ed6a1"
+    assert re.fullmatch(
+        r"jetify-com/devbox-install-action@[0-9a-f]{40}",
+        steps["Install Devbox"]["uses"],
     )
     assert "env" not in steps["Initialize project"]
     assert "env" not in steps["Build project artifacts"]

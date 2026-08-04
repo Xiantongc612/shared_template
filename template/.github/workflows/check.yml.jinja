@@ -1,3 +1,4 @@
+{% from "template/_versions.jinja" import versions -%}
 ---
 name: Check
 
@@ -12,10 +13,10 @@ permissions:
 
 jobs:
   check:
-    runs-on: ubuntu-22.04
+    runs-on: {{ versions.ubuntu_runner }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@{{ versions.checkout_action }}
         with:
           fetch-depth: 0
 {% if 'client' in components %}
@@ -26,7 +27,7 @@ jobs:
           libssl-dev libayatana-appindicator3-dev librsvg2-dev
 {% endif %}
       - name: Install Devbox
-        uses: jetify-com/devbox-install-action@v0.13.0
+        uses: jetify-com/devbox-install-action@{{ versions.devbox_action }}
         with:
           enable-cache: true
       - name: Initialize project

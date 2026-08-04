@@ -1,7 +1,8 @@
+{% from "template/_versions.jinja" import versions -%}
 {
   "name": "frontend",
   "private": true,
-  "version": "0.1.0",
+  "version": "{{ versions.project }}",
   "type": "module",
   "scripts": {
     "dev": "astro dev",
@@ -13,16 +14,16 @@
     "test:e2e": "playwright test"{% endif %}
   },
   "dependencies": {
-    "astro": "7.1.6"{% if frontend_ai_sdk %},
-    "ai": "7.0.48",
-    "zod": "4.3.6"{% endif %}{% if frontend_i18next %},
-    "i18next": "26.3.6"{% endif %}
+    "astro": "{{ versions.astro }}"{% if frontend_ai_sdk %},
+    "ai": "{{ versions.ai }}",
+    "zod": "{{ versions.zod }}"{% endif %}{% if frontend_i18next %},
+    "i18next": "{{ versions.i18next }}"{% endif %}
   },
   "devDependencies": {
-    "@astrojs/check": "0.9.10",
-    "@biomejs/biome": "2.5.6",
-    "typescript": "6.0.3",
-    "wrangler": "4.118.0"{% if frontend_playwright %},
-    "@playwright/test": "1.62.1"{% endif %}
+    "@astrojs/check": "{{ versions.astro_check }}",
+    "@biomejs/biome": "{{ versions.biome }}",
+    "typescript": "{{ versions.astro_typescript }}",
+    "wrangler": "{{ versions.wrangler }}"{% if frontend_playwright %},
+    "@playwright/test": "{{ versions.playwright }}"{% endif %}
   }
 }
