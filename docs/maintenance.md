@@ -33,6 +33,10 @@ The repository scans with the committed `semgrep.yml` rule file, and generated
 projects scan with a component-aware rule file emitted from
 `template/semgrep.yml.jinja`. Rules are vendored so `devbox run check` stays
 offline and deterministic; no registry download or result upload is performed.
+The repository `.semgrepignore` overrides Semgrep's default test-file exclusions
+so the root scan covers repository Python sources including the test suite while
+still skipping Jinja templates and generated artifacts. Keep that file in sync
+when repository source layouts change.
 
 To refresh the rule sets, render a representative generated project, run
 `semgrep scan --config auto` with a scratch profile to compare coverage, then

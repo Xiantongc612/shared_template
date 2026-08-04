@@ -31,6 +31,14 @@ def test_repository_semgrep_config_is_committed_and_pinned() -> None:
     assert (ROOT / "semgrep.yml").is_file()
 
 
+def test_repository_semgrepignore_keeps_test_sources() -> None:
+    ignores = (ROOT / ".semgrepignore").read_text()
+
+    assert "tests" not in ignores.splitlines()
+    assert "test_" not in ignores
+    assert "template/**" in ignores
+
+
 def test_generated_semgrep_is_component_aware(render) -> None:
     rules = {}
     for name, answers in {

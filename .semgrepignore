@@ -1,0 +1,16 @@
+# Template sources are Jinja, not the language they render to.
+template/**
+
+# Generated and vendored artifacts that Semgrep should not parse.
+node_modules/
+.venv/
+.devbox/
+__pycache__/
+dist/
+build/
+.target/
+Cargo.lock
+bun.lock
+bun.lockb
+uv.lock
+devbox.lock
