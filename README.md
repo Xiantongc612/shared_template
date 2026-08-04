@@ -7,9 +7,15 @@ An opinionated [Copier](https://copier.readthedocs.io/) template for composing a
 This repository uses Devbox to manage development runtimes and utilities. Install
 [Git](https://git-scm.com/) and [Devbox](https://www.jetify.com/devbox/docs/installing_devbox/),
 then run `devbox run init` to create the Python environment and install the
-pre-commit hook. Run `devbox run check` for the complete repository validation.
+pre-commit hook. Run `devbox run check` for fast repository validation.
 Dependency updates, Copier compatibility, and release policy are documented in
 [`docs/maintenance.md`](docs/maintenance.md).
+
+Run `devbox run integration` on Linux to render each component independently and
+execute its generated initialization, checks, tests, and artifact build. The
+FastAPI case requires Docker Buildx, and the Tauri case requires the Linux system
+libraries listed in the generated build workflow. Focused commands such as
+`devbox run integration:react` validate one component.
 
 ## Component selection rules
 

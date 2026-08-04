@@ -35,6 +35,20 @@ Copier itself is tested through the representative tagged-template update test.
 Upgrade Copier separately and run the complete matrix before accepting a new
 minimum version.
 
+## Generated integration
+
+`devbox run check` validates repository source and deterministic template
+rendering. `devbox run integration` additionally renders React, Astro, Tauri,
+Hono, and FastAPI projects independently, then runs each generated project's
+`init`, `check`, `test`, and `build` commands. Focused `integration:<component>`
+commands support local maintenance.
+
+The generated integration matrix runs on pushes to `main` and can be dispatched
+manually. Tauri validation requires Linux desktop build libraries and both Debian
+and AppImage bundles. FastAPI artifact validation requires Docker Buildx and a
+valid OCI archive. These builds remain local validation and do not deploy or
+publish artifacts.
+
 ## Versioning
 
 Template releases use semantic versioning:

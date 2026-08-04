@@ -1,0 +1,55 @@
+---
+name: Generated integration
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: generated-integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generated-project:
+    name: ${{ matrix.case }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: ${{ matrix.timeout }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - case: react
+            timeout: 30
+          - case: astro
+            timeout: 30
+          - case: hono
+            timeout: 30
+          - case: fastapi
+            timeout: 40
+          - case: tauri
+            timeout: 75
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Install Tauri system dependencies
+        if: matrix.case == 'tauri'
+        run: >-
+          sudo apt-get update && sudo apt-get install -y
+          libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev
+          libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf libfuse2
+      - name: Set up Docker Buildx
+        if: matrix.case == 'fastapi'
+        uses: docker/setup-buildx-action@v3
+      - name: Install Devbox
+        uses: jetify-com/devbox-install-action@v0.13.0
+        with:
+          enable-cache: true
+      - name: Install repository environment
+        run: devbox install
+      - name: Validate generated project
+        run: devbox run "integration:${{ matrix.case }}"
