@@ -35,7 +35,9 @@ jobs:
             timeout: 75
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.2.2
+        with:
+          persist-credentials: false
       - name: Install Tauri system dependencies
         if: matrix.case == 'tauri'
         run: >-
@@ -44,12 +46,13 @@ jobs:
           libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf libfuse2
       - name: Set up Docker Buildx
         if: matrix.case == 'fastapi'
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
       - name: Install Devbox
-        uses: jetify-com/devbox-install-action@v0.13.0
+        uses: jetify-com/devbox-install-action@22b0f5500b14df4ea357ce673fbd4ced940ed6a1 # v0.13.0
         with:
           enable-cache: true
-      - name: Install repository environment
-        run: devbox install
+          devbox-version: 0.17.5
+          sha256-checksum: eb2d8fb34266ba3befc294d7d6f56e2cd4da2cacb7a0cf52db5b8092575544f8
+          disable-nix-access-token: true
       - name: Validate generated project
         run: devbox run "integration:${{ matrix.case }}"

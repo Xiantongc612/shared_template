@@ -1,6 +1,6 @@
 import json
 
-from support import Render
+from support import ROOT, Render
 
 
 def test_root_commands_have_separate_responsibilities(render: Render) -> None:
@@ -37,3 +37,18 @@ def test_astro_only_test_is_a_successful_noop(render: Render) -> None:
 
     assert scripts["test"] == ["echo 'No unit tests configured.'"]
     assert "test:e2e" not in scripts
+
+
+def test_repository_commands_enforce_uv_lock() -> None:
+    scripts = json.loads((ROOT / "devbox.json").read_text())["shell"]["scripts"]
+
+    assert "uv lock --check" in scripts["check"]
+    assert "actionlint" in scripts["check"]
+    uv_commands = [
+        command
+        for commands in scripts.values()
+        for command in commands
+        if command.startswith("uv run")
+    ]
+    assert uv_commands
+    assert all(command.startswith("uv run --locked ") for command in uv_commands)

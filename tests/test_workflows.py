@@ -1,4 +1,21 @@
-from support import Render
+import re
+
+from support import ROOT, Render
+
+
+def test_repository_workflows_pin_runners_actions_and_devbox() -> None:
+    workflow_text = "\n".join(
+        path.read_text() for path in (ROOT / ".github" / "workflows").iterdir()
+    )
+    action_refs = re.findall(r"uses: ([^\s]+)", workflow_text)
+
+    assert "ubuntu-latest" not in workflow_text
+    assert action_refs
+    assert all(re.search(r"@[0-9a-f]{40}$", ref) for ref in action_refs)
+    assert "devbox-version: 0.17.5" in workflow_text
+    assert "sha256-checksum:" in workflow_text
+    assert "disable-nix-access-token: true" in workflow_text
+    assert "persist-credentials: false" in workflow_text
 
 
 def test_workflows_use_separate_commands_and_least_privilege(render: Render) -> None:

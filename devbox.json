@@ -4,7 +4,8 @@
     "uv@latest",
     "gitleaks@latest",
     "pre-commit@latest",
-    "bun@latest"
+    "bun@latest",
+    "actionlint@1.7.12"
   ],
   "shell": {
     "init_hook": [],
@@ -15,28 +16,30 @@
       ],
       "check": [
         "gitleaks git",
-        "uv run ruff check .",
-        "uv run ruff format --check .",
-        "uv run ty check",
-        "uv run pytest"
+        "uv lock --check",
+        "actionlint",
+        "uv run --locked ruff check .",
+        "uv run --locked ruff format --check .",
+        "uv run --locked ty check",
+        "uv run --locked pytest"
       ],
       "integration": [
-        "uv run python scripts/generated_integration.py all"
+        "uv run --locked python scripts/generated_integration.py all"
       ],
       "integration:react": [
-        "uv run python scripts/generated_integration.py react"
+        "uv run --locked python scripts/generated_integration.py react"
       ],
       "integration:astro": [
-        "uv run python scripts/generated_integration.py astro"
+        "uv run --locked python scripts/generated_integration.py astro"
       ],
       "integration:tauri": [
-        "uv run python scripts/generated_integration.py tauri"
+        "uv run --locked python scripts/generated_integration.py tauri"
       ],
       "integration:hono": [
-        "uv run python scripts/generated_integration.py hono"
+        "uv run --locked python scripts/generated_integration.py hono"
       ],
       "integration:fastapi": [
-        "uv run python scripts/generated_integration.py fastapi"
+        "uv run --locked python scripts/generated_integration.py fastapi"
       ]
     }
   }
