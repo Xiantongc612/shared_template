@@ -1,5 +1,8 @@
 ---
 import { siteName } from "../site";
+{% if frontend_ai_sdk -%}
+import { aiSdkAvailable } from "../integrations/ai";
+{% endif -%}
 {% if frontend_i18next -%}
 import { translate } from "../integrations/i18n";
 
@@ -10,7 +13,7 @@ const heading = "Content with a clear point of view.";
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en"{% if frontend_ai_sdk %} data-ai-sdk={aiSdkAvailable ? "available" : "missing"}{% endif %}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />

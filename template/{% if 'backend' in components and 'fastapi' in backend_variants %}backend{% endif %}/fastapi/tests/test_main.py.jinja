@@ -10,3 +10,11 @@ def test_health() -> None:
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+{% if fastapi_pydantic_ai %}
+
+
+def test_optional_pydantic_ai_imports_without_creating_an_agent() -> None:
+    from app.ai import Agent
+
+    assert Agent.__name__ == "Agent"
+{% endif -%}

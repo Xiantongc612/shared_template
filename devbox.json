@@ -29,17 +29,32 @@
       "integration:react": [
         "uv run --locked python scripts/generated_integration.py react"
       ],
+      "integration:react-integrations": [
+        "uv run --locked python scripts/generated_integration.py react-integrations"
+      ],
       "integration:astro": [
         "uv run --locked python scripts/generated_integration.py astro"
+      ],
+      "integration:astro-integrations": [
+        "uv run --locked python scripts/generated_integration.py astro-integrations"
       ],
       "integration:tauri": [
         "uv run --locked python scripts/generated_integration.py tauri"
       ],
+      "integration:tauri-integrations": [
+        "uv run --locked python scripts/generated_integration.py tauri-integrations"
+      ],
       "integration:hono": [
         "uv run --locked python scripts/generated_integration.py hono"
       ],
+      "integration:hono-integrations": [
+        "uv run --locked python scripts/generated_integration.py hono-integrations"
+      ],
       "integration:fastapi": [
         "uv run --locked python scripts/generated_integration.py fastapi"
+      ],
+      "integration:fastapi-integrations": [
+        "uv run --locked python scripts/generated_integration.py fastapi-integrations"
       ]
     }
   }

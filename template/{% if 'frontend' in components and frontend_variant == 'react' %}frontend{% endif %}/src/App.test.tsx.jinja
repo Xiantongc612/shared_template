@@ -14,4 +14,11 @@ describe("App", () => {
     expect(screen.getByText("{{ project_name }}")).toBeDefined();
     expect(screen.getByRole("heading", { level: 1 })).toBeDefined();
   });
+{% if frontend_ai_sdk %}
+  test("loads the optional AI SDK without creating a model", async () => {
+    const { aiSdkAvailable } = await import("./integrations/ai");
+
+    expect(aiSdkAvailable).toBe(true);
+  });
+{% endif -%}
 });

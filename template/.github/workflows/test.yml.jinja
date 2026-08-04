@@ -94,9 +94,9 @@ jobs:
         run: devbox run init
       - name: Install Chromium
 {% if frontend_playwright | default(false) %}
-        run: bunx --cwd frontend playwright install --with-deps chromium
+        run: bun run --cwd frontend playwright install --with-deps chromium
 {% else %}
-        run: bunx --cwd client playwright install --with-deps chromium
+        run: bun run --cwd client playwright install --with-deps chromium
 {% endif %}
       - name: Run end-to-end tests
         run: devbox run test:e2e

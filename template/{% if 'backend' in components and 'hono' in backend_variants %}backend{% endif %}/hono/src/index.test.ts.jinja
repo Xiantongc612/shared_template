@@ -9,4 +9,11 @@ describe("Hono service", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ status: "ok" });
   });
+{% if hono_ai_sdk %}
+  test("loads the optional AI SDK without creating a model", async () => {
+    const { aiSdkAvailable } = await import("./ai");
+
+    expect(aiSdkAvailable).toBe(true);
+  });
+{% endif -%}
 });

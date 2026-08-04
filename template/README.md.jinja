@@ -145,7 +145,7 @@ emits AppImage and Debian bundles below `client/src-tauri/target/release/bundle/
 macOS and Windows bundles require their respective native runners and are not
 built by the generated workflows.
 {% if client_playwright %}
-Install Chromium with `bunx --cwd client playwright install chromium`, then run
+Install Chromium with `bun run --cwd client playwright install chromium`, then run
 `bun run --cwd client test:e2e`.
 {% endif %}
 {% endif %}
@@ -167,7 +167,7 @@ OpenTofu owns separate staging and production Pages projects, while Wrangler
 uploads this static directory. No adapter, Pages Functions, or server-side runtime
 is configured.
 {% if frontend_playwright %}
-Install a Playwright browser with `bunx --cwd frontend playwright install chromium`,
+Install a Playwright browser with `bun run --cwd frontend playwright install chromium`,
 then run the end-to-end suite with `bun run --cwd frontend test:e2e`.
 {% endif %}
 {% endif %}
@@ -234,7 +234,7 @@ bun run --cwd frontend build
 
 The production artifact is the provider-neutral `frontend/dist/` directory.
 {% if frontend_playwright %}
-Install a Playwright browser with `bunx --cwd frontend playwright install chromium`,
+Install a Playwright browser with `bun run --cwd frontend playwright install chromium`,
 then run the end-to-end suite with `bun run --cwd frontend test:e2e`.
 {% endif %}
 {% endif %}

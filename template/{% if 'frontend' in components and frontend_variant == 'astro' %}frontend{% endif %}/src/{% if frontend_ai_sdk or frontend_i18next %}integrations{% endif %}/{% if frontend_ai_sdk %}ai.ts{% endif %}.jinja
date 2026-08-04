@@ -1,3 +1,4 @@
-import type { UIMessage } from "ai";
+import { generateText, type UIMessage } from "ai";
 
 export type ChatMessage = UIMessage;
+export const aiSdkAvailable = typeof generateText === "function";

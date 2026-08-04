@@ -2,6 +2,7 @@
 name: Generated integration
 
 on:
+  pull_request:
   push:
     branches:
       - main
@@ -24,28 +25,58 @@ jobs:
       matrix:
         include:
           - case: react
+            family: react
             timeout: 30
-          - case: astro
-            timeout: 30
-          - case: hono
-            timeout: 30
-          - case: fastapi
+            e2e: false
+          - case: react-integrations
+            family: react
             timeout: 40
+            e2e: true
+          - case: astro
+            family: astro
+            timeout: 30
+            e2e: false
+          - case: astro-integrations
+            family: astro
+            timeout: 40
+            e2e: true
+          - case: hono
+            family: hono
+            timeout: 30
+            e2e: false
+          - case: hono-integrations
+            family: hono
+            timeout: 35
+            e2e: false
+          - case: fastapi
+            family: fastapi
+            timeout: 40
+            e2e: false
+          - case: fastapi-integrations
+            family: fastapi
+            timeout: 45
+            e2e: false
           - case: tauri
+            family: tauri
             timeout: 75
+            e2e: false
+          - case: tauri-integrations
+            family: tauri
+            timeout: 90
+            e2e: true
     steps:
       - name: Check out repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.2.2
         with:
           persist-credentials: false
       - name: Install Tauri system dependencies
-        if: matrix.case == 'tauri'
+        if: matrix.family == 'tauri'
         run: >-
           sudo apt-get update && sudo apt-get install -y
           libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev
           libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf libfuse2
       - name: Set up Docker Buildx
-        if: matrix.case == 'fastapi'
+        if: matrix.family == 'fastapi'
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
       - name: Install Devbox
         uses: jetify-com/devbox-install-action@22b0f5500b14df4ea357ce673fbd4ced940ed6a1 # v0.13.0
@@ -54,5 +85,37 @@ jobs:
           devbox-version: 0.17.5
           sha256-checksum: eb2d8fb34266ba3befc294d7d6f56e2cd4da2cacb7a0cf52db5b8092575544f8
           disable-nix-access-token: true
+      - name: Cache Bun downloads
+        if: matrix.family != 'fastapi'
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ~/.bun/install/cache
+          key: integration-${{ runner.os }}-bun-${{ matrix.case }}-${{ hashFiles('copier.yml', 'template/**') }}
+          restore-keys: integration-${{ runner.os }}-bun-${{ matrix.case }}-
+      - name: Cache Cargo downloads
+        if: matrix.family == 'tauri'
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+          key: integration-${{ runner.os }}-cargo-${{ matrix.case }}-${{ hashFiles('template/**/Cargo.toml.jinja') }}
+          restore-keys: integration-${{ runner.os }}-cargo-${{ matrix.case }}-
+      - name: Cache uv downloads
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ~/.cache/uv
+          key: integration-${{ runner.os }}-uv-${{ matrix.case }}-${{ hashFiles('uv.lock', 'template/**') }}
+          restore-keys: integration-${{ runner.os }}-uv-${{ matrix.case }}-
+      - name: Cache Playwright browsers
+        if: matrix.e2e
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ~/.cache/ms-playwright
+          key: integration-${{ runner.os }}-playwright-${{ matrix.case }}-${{ hashFiles('template/**/package.json.jinja') }}
+          restore-keys: integration-${{ runner.os }}-playwright-${{ matrix.case }}-
       - name: Validate generated project
+        env:
+          DOCKER_CACHE_ARGS: ${{ matrix.family == 'fastapi' && '--cache-from type=gha,scope=integration-fastapi --cache-to type=gha,mode=max,scope=integration-fastapi' || '' }}
         run: devbox run "integration:${{ matrix.case }}"
