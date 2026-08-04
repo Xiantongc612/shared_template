@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>Application icon</title>
+  <rect width="1024" height="1024" rx="192" fill="#146b73" />
+  <path d="M256 288h512v128H448v320H320V416h-64z" fill="#ffffff" />
+</svg>

@@ -9,5 +9,12 @@
     "rules": {
       "preset": "recommended"
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.astro"],
+      "linter": { "enabled": false },
+      "assist": { "enabled": false }
+    }
+  ]
 }

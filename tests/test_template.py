@@ -335,6 +335,9 @@ def test_astro_generator_is_independent(render: Render) -> None:
     assert package["dependencies"]["i18next"] == "26.3.6"
     assert "react" not in package["dependencies"]
     assert "@tanstack/react-query" not in package["dependencies"]
+    biome = json.loads((frontend / "biome.json").read_text())
+    assert biome["overrides"][0]["includes"] == ["**/*.astro"]
+    assert biome["overrides"][0]["linter"]["enabled"] is False
     assert (frontend / "src" / "pages" / "index.astro").is_file()
     assert not (frontend / "src" / "App.tsx").exists()
     assert (frontend / "playwright.config.ts").is_file()
@@ -358,7 +361,15 @@ def test_client_generator_is_independent(render: Render) -> None:
     assert "ai" in package["dependencies"]
     assert "@tanstack/react-query" in package["dependencies"]
     assert "i18next" in package["dependencies"]
-    assert (client / "src-tauri" / "tauri.conf.json").is_file()
+    devbox = json.loads((project / "devbox.json").read_text())
+    assert any(
+        "tauri icon src-tauri/app-icon.svg" in command
+        for command in devbox["shell"]["scripts"]["init"]
+    )
+    assert (client / "src-tauri" / "app-icon.svg").is_file()
+    tauri_config = json.loads((client / "src-tauri" / "tauri.conf.json").read_text())
+    assert "icons/32x32.png" in tauri_config["bundle"]["icon"]
+    assert "icons/icon.ico" in tauri_config["bundle"]["icon"]
     assert (client / "src-tauri" / "src" / "lib.rs").is_file()
     assert not (project / "frontend").exists()
 

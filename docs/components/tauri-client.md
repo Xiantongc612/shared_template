@@ -21,3 +21,7 @@ Tauri prerequisites. Generated automation installs WebKitGTK 4.1, GTK 3, and
 related packages and produces AppImage and Debian bundles on Linux. macOS and
 Windows bundles require their respective operating systems and are not built by
 the generated workflows.
+
+`devbox run init` derives platform icon files under `client/src-tauri/icons/`
+from the managed `client/src-tauri/app-icon.svg`. Replace that source artwork and
+remove the generated icon directory to regenerate customized icons.
