@@ -5,8 +5,9 @@ component generators, generated project commands, and GitHub Actions automation
 are implemented. Cloudflare infrastructure and release automation for the Hono
 and Astro generators are implemented. Semgrep static application security
 testing is implemented as shared tooling for the repository and generated
-projects. The active milestone resolves repository-hygiene debt so the
-repository follows the same validation and pinning discipline it generates.
+projects. The repository hygiene milestone brought the repository to the same
+validation and pinning discipline it generates. The active milestone automates
+dependency updates with Dependabot for the repository and generated projects.
 
 ## Constraints
 
@@ -107,14 +108,44 @@ None.
 - The repository exposes separate `check` and `test` commands that mirror the
   generated project contract, and the repository workflows run both.
 
-## Long-Term Goals
+## Dependency Automation Milestone
 
-The following are intentionally not active milestones. They remain useful but
-are deferred until capacity or a dependency-update need makes them worthwhile.
+### Approved contracts
 
-- Automated dependency update tooling (Dependabot or Renovate) for repository and
-  generated pins, replacing the fully manual update procedure in
-  `docs/maintenance.md`.
+- Dependabot owns GitHub Actions updates for the repository and every generated
+  project, matching the existing SHA-pinning and reviewed-version-comment
+  discipline.
+- The repository Dependabot config additionally enables the `uv` and
+  `pre-commit` ecosystems. A `pre-commit` rev bump must be mirrored into
+  `devbox.json` and `template/_versions.jinja` before the update is merged.
+- Generated projects configure component-aware ecosystems (`bun`, `cargo`,
+  `uv`, and `opentofu`) so Dependabot coverage tracks the selected components.
+  The template never emits lockfiles or an ecosystem for an unselected
+  component. Lockfile-based updates stay inert until a project owner commits
+  the generated lockfiles, which is their choice.
+- Devbox pins and generated `template/_versions.jinja` pins remain on the manual
+  update procedure in `docs/maintenance.md` because Dependabot cannot parse
+  either file.
+- Patch-update auto-merge is enabled for `dependabot[bot]` pull requests only,
+  pins `dependabot/fetch-metadata` by full commit SHA, and never touches
+  deployment or publication behavior.
+
+### Implemented scope
+
+- The repository `.github/dependabot.yml` enables `github-actions`, `uv`, and
+  `pre-commit` on a weekly schedule with bounded pull request limits.
+- The repository `.github/workflows/auto-merge.yml` auto-merges Dependabot patch
+  updates behind the `dependabot[bot]` actor guard.
+- `template/.github/dependabot.yml.jinja` renders `github-actions` always and
+  `bun`, `cargo`, `uv`, and `opentofu` only for selected components.
+- `template/.github/workflows/auto-merge.yml.jinja` renders the same guarded
+  patch auto-merge for every generated project, using the
+  `dependabot/fetch-metadata` SHA pinned in `template/_versions.jinja`.
+- `docs/maintenance.md` documents the Dependabot-owned versus manual update
+  split and the `pre-commit` cross-pin requirement.
+- Tests cover the root and rendered Dependabot configuration, the
+  component-conditional ecosystem set, the auto-merge guard, and the
+  `fetch-metadata` pin.
 
 ## Deferred Design Decisions
 
