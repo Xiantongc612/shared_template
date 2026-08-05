@@ -100,6 +100,10 @@ def test_render_matrix(
         expected_workflows.add("cloudflare-deploy.yml")
 
     assert SHARED_FILES <= {path.name for path in project.iterdir()}
+    assert isinstance(
+        yaml.safe_load((project / ".github" / "dependabot.yml").read_text())["updates"],
+        list,
+    )
     assert expected_workflows == {
         path.name for path in (project / ".github" / "workflows").iterdir()
     }

@@ -89,6 +89,7 @@ def test_workflow_yaml_runners_timeouts_and_concurrency(render: Render) -> None:
     )
     workflows = load_workflows(project)
     expected_timeouts = {
+        ("auto-merge.yml", "auto-merge"): 10,
         ("check.yml", "check"): 60,
         ("test.yml", "test"): 60,
         ("test.yml", "test-e2e"): 60,
@@ -99,6 +100,7 @@ def test_workflow_yaml_runners_timeouts_and_concurrency(render: Render) -> None:
     }
 
     assert workflows.keys() == {
+        "auto-merge.yml",
         "build.yml",
         "check.yml",
         "cloudflare-deploy.yml",
