@@ -1,5 +1,5 @@
 ---
-name: Check
+name: Validate
 
 on:
   pull_request:

@@ -15,6 +15,9 @@
         "uv sync --locked",
         "pre-commit install"
       ],
+      "fmt": [
+        "uv run --locked ruff format ."
+      ],
       "check": [
         "gitleaks git",
         "uv lock --check",
@@ -23,6 +26,10 @@
         "uv run --locked ruff check .",
         "uv run --locked ruff format --check .",
         "uv run --locked ty check"
+      ],
+      "build": [
+        "mkdir -p dist",
+        "tar -czf dist/template.tar.gz --exclude=.git --exclude=.devbox --exclude=.venv --exclude=.pytest_cache --exclude=.ruff_cache --exclude=__pycache__ ."
       ],
       "test": [
         "uv run --locked pytest"

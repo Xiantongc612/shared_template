@@ -36,13 +36,13 @@ jobs:
         run: devbox run check
       - name: Run repository tests
         run: devbox run test
-      - name: Prepare release archive
-        run: mkdir -p release-artifacts && tar -czf release-artifacts/template.tar.gz -C .. "$(basename "$GITHUB_WORKSPACE")"
+      - name: Build template archive
+        run: devbox run build
       - name: Upload release artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-artifacts
-          path: release-artifacts/
+          path: dist/
           if-no-files-found: error
 
   publish:
