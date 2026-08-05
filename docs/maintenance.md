@@ -9,6 +9,27 @@ lockfiles. Initialization creates local Devbox, Bun, uv, and OpenTofu lockfiles,
 while Cargo creates its local lockfile on first resolution; generated projects
 ignore these files. Transitive dependency versions remain ecosystem-resolved.
 
+## Dependabot
+
+Dependabot owns GitHub Actions updates for the repository and every generated
+project. The repository `.github/dependabot.yml` additionally enables the `uv`
+and `pre-commit` ecosystems. When Dependabot bumps a `pre-commit` revision,
+mirror the same version into `devbox.json` and `template/_versions.jinja` before
+merging the pull request.
+
+Generated projects render a component-aware `.github/dependabot.yml` covering
+`github-actions` plus `bun`, `cargo`, `uv`, and `opentofu` for selected
+components. These lockfile-based ecosystems stay inactive until a project owner
+commits the generated lockfiles, which `.gitignore` excludes by default;
+Dependabot then proposes updates directly in the generated project.
+
+Dependabot patch updates are auto-merged for `dependabot[bot]` pull requests by
+the repository and generated `auto-merge.yml` workflows, which pin
+`dependabot/fetch-metadata` by full commit SHA.
+
+Devbox pins and the generated pins in `template/_versions.jinja` are not
+parseable by Dependabot and remain on the manual procedure below.
+
 Update one ecosystem at a time:
 
 1. Update the declared version or run the ecosystem's update command.
