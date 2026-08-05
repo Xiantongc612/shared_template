@@ -7,10 +7,11 @@ An opinionated [Copier](https://copier.readthedocs.io/) template for composing a
 This repository uses Devbox to manage development runtimes and utilities. Install
 [Git](https://git-scm.com/) and [Devbox](https://www.jetify.com/devbox/docs/installing_devbox/),
 then run `devbox run init` to create the Python environment and install the
-pre-commit hook. Run `devbox run check` for repository validation and `devbox run
-test` for the unit test suite. The pre-commit hook covers the same fast checks as
-`check`. Dependency updates, Copier compatibility, and release policy are
-documented in [`docs/maintenance.md`](docs/maintenance.md).
+pre-commit hook. Run `devbox run fmt` to format Python sources, `devbox run check`
+for repository validation, `devbox run test` for the unit test suite, and
+`devbox run build` to package the template archive. The pre-commit hook covers
+the same fast checks as `check`. Dependency updates, Copier compatibility, and
+release policy are documented in [`docs/maintenance.md`](docs/maintenance.md).
 
 Run `devbox run integration` on Linux to render minimal and optional-integration
 variants of every component independently. The suite executes generated checks,
@@ -45,7 +46,10 @@ design decisions documented in `PLAN.md`.
 - Generated root commands for formatting, static checks, unit tests, optional
   end-to-end tests, and local artifact builds
 - Generated GitHub Actions with immutable action pins, bounded jobs, safe
-  dependency caches, read-only validation, and isolated tag-triggered publication
+  dependency caches, and a read-only validate stage that never builds or deploys
+  for pull requests. The release stage builds artifacts and requires manual
+  approval to publish, and the deploy stage consumes the released artifacts
+  under a separate production approval boundary.
 - Component-owned OpenTofu and Cloudflare release automation for Hono and Astro
 
 ## Frontend

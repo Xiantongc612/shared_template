@@ -188,18 +188,30 @@ None.
 
 ### Remaining work
 
-- Add repository `fmt` and `build` Devbox commands and have the repository
-  release workflow run `devbox run build`.
-- Replace generated check, test, and build workflows with a chained validate,
-  release, and deploy set and delete the superseded workflow templates.
-- Update the workflow, command, cloudflare, rendering, and update tests for the
-  new command surface and pipeline model.
-- Document the staged pipeline, dual approval boundary, and artifact flow in
-  the repository and generated documentation.
+None.
 
 ### Implemented scope
 
-None yet.
+- The repository Devbox environment exposes `fmt` (Ruff formatting) and `build`
+  (template archive packaging) commands that mirror the generated project
+  command surface, and the repository release workflow runs `devbox run build`.
+- Generated projects render chained `validate`, `release`, and `deploy`
+  workflows connected by `workflow_run` completion; the superseded check, test,
+  build, and cloudflare-deploy workflow templates were removed.
+- Pull requests run only the read-only validate stage. The release stage builds
+  and uploads artifacts on `main` for staging and on `v*` tags for production,
+  where a production-environment approval gate protects the GitHub Release
+  publish job. The deploy stage downloads the release-built artifacts, applies
+  component OpenTofu infrastructure, and runs Wrangler release commands;
+  production deploy requires a second GitHub environment approval.
+- Chained workflows check out the triggering commit, derive the deployment mode
+  and environment from the triggering run's branch, and pass the triggering
+  run's SHA as the Wrangler version tag. Every chained job guards on the
+  triggering run's conclusion and event type so deployment never runs for pull
+  requests.
+- Tests cover the repository command surface, the chained workflow triggers and
+  guards, the production-only publish gate, artifact consumption by the deploy
+  stage, cache safety, and rendered actionlint validity.
 
 ## Deferred Design Decisions
 

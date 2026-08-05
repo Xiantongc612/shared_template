@@ -45,16 +45,22 @@ devbox run test:e2e
 ```
 {% endif %}
 
-Pushing a `v*` tag runs validation and publishes a GitHub Release containing the
-selected build artifacts. It does not deploy Workers, push container images, or
-publish to an application store.
+Generated GitHub Actions chain three stages by `workflow_run` completion:
+`validate` (checks, unit tests, and optional browser tests) runs for pull
+requests and `main` pushes, `release` builds and uploads artifacts, and `deploy`
+applies infrastructure and releases the built artifacts. Pull requests never
+build or deploy. Pushing a `v*` tag builds the release, requires manual approval
+in the production environment, and publishes a GitHub Release containing the
+selected build artifacts. It does not push container images or publish to an
+application store.
 {% if ('frontend' in components and frontend_variant == 'astro') or ('backend' in components and 'hono' in backend_variants) %}
 ## Cloudflare deployment
 
 Cloudflare resources use the identifier `{{ cloudflare_project_id }}`. The
-`Deploy Cloudflare` workflow releases `main` to the protected `staging` GitHub
-environment and `v*` tags to the protected `production` environment. Each
-environment must define these secrets:
+`Deploy` workflow releases `main` to the `staging` GitHub environment and `v*`
+tags to the protected `production` environment. Staging deploys automatically
+after the release build passes; production requires manual approval both to
+publish the release and to deploy. Each environment must define these secrets:
 
 - `CLOUDFLARE_ACCOUNT_ID`: target Cloudflare account.
 - `CLOUDFLARE_API_TOKEN`: environment-specific API token.
@@ -65,12 +71,13 @@ environment must define these secrets:
 Create separate R2 buckets and credentials for staging and production. The API
 token needs{% if 'backend' in components and 'hono' in backend_variants %} Workers Scripts Edit{% endif %}{% if 'frontend' in components and frontend_variant == 'astro' %}{% if 'backend' in components and 'hono' in backend_variants %} and{% endif %} Cloudflare Pages Edit{% endif %}.
 Configure the production GitHub environment with required reviewers so its
-credentials remain the approval boundary.
+credentials remain an approval boundary.
 
 OpenTofu uses R2 through its S3-compatible endpoint. Its backend blocks are
 intentionally partial: the workflow supplies the bucket, endpoint, and credentials
 without writing them to source. State keys are component-specific, and staging
-and production run from separate roots.
+and production run from separate roots. The deploy stage downloads the
+`dist/` bundles built by the release stage instead of rebuilding them.
 
 `devbox run check` formats and validates every root with `-backend=false`; it does
 not contact R2 or Cloudflare. Do not run `tofu apply`, Wrangler release commands,

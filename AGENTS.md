@@ -61,8 +61,11 @@
 - Keep formatting, checks, tests, builds, and infrastructure validation
   non-deploying. Deployment commands and workflows must be explicit and must not
   run for pull requests.
-- Release `main` to staging and `v*` tags to production. Preserve GitHub
-  environment protection as the approval boundary for production.
+- Chain generated deployment automation as validate, release, and deploy
+  workflows connected by `workflow_run` completion. Release `main` to staging
+  and `v*` tags to production. Production requires manual approval at both the
+  release publish step and the production deploy step; staging deploys
+  automatically after its release build passes.
 
 ## Generated automation design
 
@@ -77,6 +80,11 @@
   backend configuration.
 - Validate generated workflows with actionlint and validate built artifacts by
   structure or executable behavior rather than filename existence alone.
+- Chained release and deploy workflows run on the default branch, check out the
+  triggering commit, derive the environment from the triggering run's branch,
+  and guard on the triggering run's conclusion and event type so they never
+  execute for pull requests. Deploy stages consume the artifacts built and
+  validated by the release stage instead of rebuilding.
 
 ## Secrets and 1Password on Windows
 

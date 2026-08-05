@@ -112,10 +112,15 @@ workflow runs the full repository check and attaches the template archive. The
 release workflow is not a deployment and does not modify remote resources beyond
 the GitHub Release.
 
-Generated projects include separate check, test, build, and GitHub Release
-workflows. Their release workflow publishes selected artifacts to a GitHub
-Release from a `v*` tag. Tauri automation produces Linux AppImage and Debian
-bundles only because macOS and Windows artifacts require native runners. OCI and
-Cloudflare artifacts are built locally without deployment by these validation and
-GitHub Release workflows. A separate environment-protected workflow applies
-component infrastructure and releases Hono and Astro to Cloudflare.
+Generated projects chain a `validate` workflow (checks, unit tests, and
+optional browser tests), a `release` workflow (artifact builds and GitHub
+Release publication), and a `deploy` workflow (Cloudflare) connected by
+`workflow_run` completion. Pull requests run the read-only validate stage only.
+The release stage builds and uploads artifacts for `main` pushes and, on `v*`
+tags, publishes a GitHub Release behind a production approval. The deploy stage
+downloads the release-built artifacts, applies component infrastructure with
+OpenTofu, and runs Wrangler release commands; staging deploys automatically and
+production requires a separate GitHub environment approval. Tauri automation
+produces Linux AppImage and Debian bundles only because macOS and Windows
+artifacts require native runners. OCI and Cloudflare artifacts are built locally
+without deployment by the validate and release stages.
