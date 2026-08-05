@@ -6,8 +6,11 @@ are implemented. Cloudflare infrastructure and release automation for the Hono
 and Astro generators are implemented. Semgrep static application security
 testing is implemented as shared tooling for the repository and generated
 projects. The repository hygiene milestone brought the repository to the same
-validation and pinning discipline it generates. The active milestone automates
-dependency updates with Dependabot for the repository and generated projects.
+validation and pinning discipline it generates. The dependency automation
+milestone automates updates with Dependabot for the repository and generated
+projects. The active milestone restructures generated automation into staged
+validate, release, and deploy pipelines and aligns repository Devbox commands
+with the generated project surface.
 
 ## Constraints
 
@@ -30,6 +33,12 @@ dependency updates with Dependabot for the repository and generated projects.
   browser tests, local builds, and semantic artifact validation.
 - Local checks and artifact builds must not deploy, publish packages, push images,
   or mutate remote resources.
+- Repository and generated projects expose consistent Devbox command names and
+  responsibilities; the repository `check` and `test` split mirrors the
+  generated project contract.
+- Generated deployment automation is a chain of validate, release, and deploy
+  workflows that never runs for pull requests. Production requires manual
+  approval at both the release publish step and the production deploy step.
 
 ## Static Analysis Milestone
 
@@ -146,6 +155,51 @@ None.
 - Tests cover the root and rendered Dependabot configuration, the
   component-conditional ecosystem set, the auto-merge guard, and the
   `fetch-metadata` pin.
+
+## Release Pipeline Milestone
+
+### Approved contracts
+
+- The repository and generated projects expose consistent Devbox commands:
+  `init`, `fmt`, `check`, `test`, and `build` (plus `test:e2e` when
+  applicable). The repository `fmt` command formats Python sources with Ruff and
+  the repository `build` command packages the template archive, mirroring the
+  generated project command surface.
+- Generated projects chain three GitHub Actions workflows by `workflow_run`
+  completion: `validate` (checks, unit tests, and optional browser tests),
+  `release` (artifact builds and GitHub Release publication), and `deploy`
+  (Cloudflare infrastructure and Wrangler releases). None of the chained
+  workflows runs for pull requests.
+- Pull requests run validation only. They never build artifacts or deploy.
+- The `release` stage runs for both staging (`main` pushes) and production
+  (`v*` tags). Staging builds and uploads artifacts without creating a GitHub
+  Release; production additionally requires manual approval before publishing
+  a GitHub Release.
+- The `deploy` stage consumes the artifacts built by the `release` stage
+  instead of rebuilding, applies component infrastructure with OpenTofu, and
+  then runs Wrangler release commands. Staging deploys automatically and
+  production requires GitHub environment approval.
+- Manual approval is required twice for production: at the release publish
+  step and at the deploy step.
+- Chained workflows derive the environment, deployment mode, checkout SHA, and
+  Wrangler version tag from the triggering `workflow_run` run rather than the
+  runner's own ref, and guard on the triggering run's conclusion and event
+  type so they never execute for pull requests.
+
+### Remaining work
+
+- Add repository `fmt` and `build` Devbox commands and have the repository
+  release workflow run `devbox run build`.
+- Replace generated check, test, and build workflows with a chained validate,
+  release, and deploy set and delete the superseded workflow templates.
+- Update the workflow, command, cloudflare, rendering, and update tests for the
+  new command surface and pipeline model.
+- Document the staged pipeline, dual approval boundary, and artifact flow in
+  the repository and generated documentation.
+
+### Implemented scope
+
+None yet.
 
 ## Deferred Design Decisions
 
