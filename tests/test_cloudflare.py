@@ -73,32 +73,54 @@ def test_cloudflare_workflow_is_explicit_and_environment_scoped(render: Render) 
             "cloudflare_project_id": "application",
         },
     )
-    workflow = (project / ".github" / "workflows" / "cloudflare-deploy.yml").read_text()
+    workflow = (project / ".github" / "workflows" / "deploy.yml").read_text()
     workflow_data = yaml.safe_load(workflow)
     job = workflow_data["jobs"]["deploy"]
     steps = {step["name"]: step for step in job["steps"]}
 
     assert "pull_request:" not in workflow
     assert "contents: read" in workflow
+    assert workflow_data[True]["workflow_run"] == {
+        "workflows": ["Release"],
+        "types": ["completed"],
+    }
     assert job["runs-on"] == "ubuntu-22.04"
     assert job["timeout-minutes"] == 60
-    assert "environment: ${{ startsWith" in workflow
+    assert job["if"] == (
+        "github.event.workflow_run.conclusion == 'success' && "
+        "github.event.workflow_run.event != 'pull_request'"
+    )
+    assert job["environment"] == (
+        "${{ github.event.workflow_run.head_branch == 'main' && 'staging' || 'production' }}"
+    )
+    assert job["env"].keys() == {"DEPLOYMENT_ENV", "GITHUB_SHA"}
+    assert job["env"]["DEPLOYMENT_ENV"] == (
+        "${{ github.event.workflow_run.head_branch == 'main' && 'staging' || 'production' }}"
+    )
+    assert job["env"]["GITHUB_SHA"] == "${{ github.event.workflow_run.head_sha }}"
     assert "R2_ACCESS_KEY_ID" in workflow
     assert "R2_SECRET_ACCESS_KEY" in workflow
     assert "tofu -chdir=backend/hono/infrastructure" in workflow
     assert "tofu -chdir=frontend/infrastructure" in workflow
     assert workflow.index("apply -auto-approve") < workflow.index("Release Hono Worker")
-    assert "devbox run build" in workflow
-    assert job["env"].keys() == {"DEPLOYMENT_ENV"}
+    assert "devbox run build" not in workflow
+    assert steps["Download Hono deploy artifact"]["with"] == {
+        "name": "hono-dist",
+        "path": "backend/hono",
+    }
+    assert steps["Download Astro deploy artifact"]["with"] == {
+        "name": "astro-dist",
+        "path": "frontend",
+    }
     assert re.fullmatch(
         r"actions/checkout@[0-9a-f]{40}",
-        steps["Check out repository"]["uses"],
+        steps["Check out triggering commit"]["uses"],
     )
     assert re.fullmatch(
         r"jetify-com/devbox-install-action@[0-9a-f]{40}",
         steps["Install Devbox"]["uses"],
     )
-    assert steps["Check out repository"]["with"]["persist-credentials"] is False
+    assert steps["Check out triggering commit"]["with"]["persist-credentials"] is False
     assert steps["Install Devbox"]["with"] == {
         "enable-cache": True,
         "devbox-version": "0.17.5",
@@ -106,7 +128,6 @@ def test_cloudflare_workflow_is_explicit_and_environment_scoped(render: Render) 
         "disable-nix-access-token": True,
     }
     assert "env" not in steps["Initialize project"]
-    assert "env" not in steps["Build project artifacts"]
     assert steps["Apply Hono infrastructure"]["env"].keys() >= {
         "AWS_ACCESS_KEY_ID",
         "AWS_SECRET_ACCESS_KEY",
@@ -147,7 +168,7 @@ def test_non_cloudflare_components_omit_deployment_residue(render: Render) -> No
         {"components": ["backend"], "backend_variants": ["fastapi"]},
     )
 
-    assert not (project / ".github" / "workflows" / "cloudflare-deploy.yml").exists()
+    assert not (project / ".github" / "workflows" / "deploy.yml").exists()
     assert "opentofu" not in (project / "devbox.json").read_text()
     assert "OpenTofu" not in (project / ".gitignore").read_text()
     assert "cloudflare_project_id" not in yaml.safe_load(

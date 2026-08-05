@@ -97,7 +97,7 @@ def test_render_matrix(
     recorded_answers = yaml.safe_load((project / ".copier-answers.yml").read_text())
     expected_workflows = WORKFLOW_FILES.copy()
     if "cloudflare_project_id" in recorded_answers:
-        expected_workflows.add("cloudflare-deploy.yml")
+        expected_workflows.add("deploy.yml")
 
     assert SHARED_FILES <= {path.name for path in project.iterdir()}
     assert isinstance(

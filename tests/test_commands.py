@@ -77,6 +77,22 @@ def test_repository_pins_semgrep() -> None:
     assert (ROOT / "semgrep.yml").is_file()
 
 
+def test_repository_commands_cover_fmt_and_build() -> None:
+    scripts = json.loads((ROOT / "devbox.json").read_text())["shell"]["scripts"]
+
+    assert "uv run --locked ruff format ." in scripts["fmt"]
+    assert any(command.startswith("mkdir -p dist") for command in scripts["build"])
+    assert any("template.tar.gz" in command for command in scripts["build"])
+    assert not any("build" in command for command in scripts["check"])
+    assert not any("check" in command for command in scripts["fmt"])
+    release = yaml.safe_load(
+        (ROOT / ".github" / "workflows" / "release.yml").read_text()
+    )
+    prepare = [step["name"] for step in release["jobs"]["prepare"]["steps"]]
+    assert "Build template archive" in prepare
+    assert "devbox run build" in yaml.safe_dump(release["jobs"]["prepare"])
+
+
 def test_repository_tooling_versions_match_template(render: Render) -> None:
     root_devbox = json.loads((ROOT / "devbox.json").read_text())
     root_packages = {

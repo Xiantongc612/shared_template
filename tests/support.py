@@ -14,7 +14,7 @@ SHARED_FILES = {
     "README.md",
     "devbox.json",
 }
-WORKFLOW_FILES = {"auto-merge.yml", "build.yml", "check.yml", "release.yml", "test.yml"}
+WORKFLOW_FILES = {"auto-merge.yml", "release.yml", "validate.yml"}
 HISTORICAL_ANSWERS = ROOT / "tests" / "fixtures" / "historical-answers.yml"
 HISTORICAL_TEMPLATE_COMMIT = "b3806641460b9f1b7d15a6c7987a0879c8dfd936"
 

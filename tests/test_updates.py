@@ -65,6 +65,6 @@ def test_copier_updates_answers_from_historical_commit(tmp_path: Path) -> None:
     )
     assert tauri_config["identifier"] == "com.example.historical-app"
     assert (project / "AGENTS.md").is_file()
-    assert WORKFLOW_FILES | {"cloudflare-deploy.yml"} == {
+    assert WORKFLOW_FILES | {"deploy.yml"} == {
         path.name for path in (project / ".github" / "workflows").iterdir()
     }

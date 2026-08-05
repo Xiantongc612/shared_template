@@ -90,22 +90,19 @@ def test_workflow_yaml_runners_timeouts_and_concurrency(render: Render) -> None:
     workflows = load_workflows(project)
     expected_timeouts = {
         ("auto-merge.yml", "auto-merge"): 10,
-        ("check.yml", "check"): 60,
-        ("test.yml", "test"): 60,
-        ("test.yml", "test-e2e"): 60,
-        ("build.yml", "build"): 90,
-        ("release.yml", "prepare"): 120,
+        ("validate.yml", "check"): 60,
+        ("validate.yml", "test"): 60,
+        ("validate.yml", "test-e2e"): 60,
+        ("release.yml", "build"): 120,
         ("release.yml", "publish"): 10,
-        ("cloudflare-deploy.yml", "deploy"): 60,
+        ("deploy.yml", "deploy"): 60,
     }
 
     assert workflows.keys() == {
         "auto-merge.yml",
-        "build.yml",
-        "check.yml",
-        "cloudflare-deploy.yml",
+        "deploy.yml",
         "release.yml",
-        "test.yml",
+        "validate.yml",
     }
     for workflow_name, workflow in workflows.items():
         assert isinstance(workflow, dict)
@@ -115,19 +112,134 @@ def test_workflow_yaml_runners_timeouts_and_concurrency(render: Render) -> None:
                 job["timeout-minutes"] == expected_timeouts[(workflow_name, job_name)]
             )
 
-    for workflow_name in ("check.yml", "test.yml", "build.yml"):
-        assert workflows[workflow_name]["concurrency"] == {
-            "group": "${{ github.workflow }}-${{ github.ref }}",
-            "cancel-in-progress": True,
-        }
+    assert workflows["validate.yml"]["concurrency"] == {
+        "group": "${{ github.workflow }}-${{ github.ref }}",
+        "cancel-in-progress": True,
+    }
     assert workflows["release.yml"]["concurrency"] == {
-        "group": "release-${{ github.ref }}",
+        "group": "release-${{ github.event.workflow_run.head_branch == 'main' && 'staging' || 'production' }}",
         "cancel-in-progress": False,
     }
-    assert workflows["cloudflare-deploy.yml"]["jobs"]["deploy"]["concurrency"] == {
-        "group": "cloudflare-${{ startsWith(github.ref, 'refs/tags/v') && 'production' || 'staging' }}",
+    assert workflows["deploy.yml"]["jobs"]["deploy"]["concurrency"] == {
+        "group": "cloudflare-${{ github.event.workflow_run.head_branch == 'main' && 'staging' || 'production' }}",
         "cancel-in-progress": False,
     }
+
+
+def test_pipeline_workflows_chain_by_workflow_run(render: Render) -> None:
+    project = render(
+        "Pipeline",
+        {"components": ["backend"], "backend_variants": ["hono"]},
+    )
+    workflows = load_workflows(project)
+
+    assert workflows["validate.yml"][True] == {
+        "pull_request": None,
+        "push": {"branches": ["main"], "tags": ["v*"]},
+    }
+    assert workflows["release.yml"][True]["workflow_run"] == {
+        "workflows": ["Validate"],
+        "types": ["completed"],
+    }
+    assert workflows["deploy.yml"][True]["workflow_run"] == {
+        "workflows": ["Release"],
+        "types": ["completed"],
+    }
+    release_build = workflows["release.yml"]["jobs"]["build"]
+    deploy = workflows["deploy.yml"]["jobs"]["deploy"]
+    for job in (release_build, deploy):
+        assert job["if"] == (
+            "github.event.workflow_run.conclusion == 'success' && "
+            "github.event.workflow_run.event != 'pull_request'"
+        )
+
+    release_checkout = release_build["steps"][0]
+    assert (
+        release_checkout["with"]["ref"] == "${{ github.event.workflow_run.head_sha }}"
+    )
+    deploy_checkout = deploy["steps"][0]
+    assert deploy_checkout["with"]["ref"] == "${{ github.event.workflow_run.head_sha }}"
+
+    assert deploy["environment"] == (
+        "${{ github.event.workflow_run.head_branch == 'main' && 'staging' || 'production' }}"
+    )
+    assert deploy["env"]["DEPLOYMENT_ENV"] == (
+        "${{ github.event.workflow_run.head_branch == 'main' && 'staging' || 'production' }}"
+    )
+    assert deploy["env"]["GITHUB_SHA"] == "${{ github.event.workflow_run.head_sha }}"
+
+
+def test_pipeline_publish_is_production_only_and_consumes_release_artifacts(
+    render: Render,
+) -> None:
+    project = render(
+        "Publish", {"components": ["backend"], "backend_variants": ["hono"]}
+    )
+    workflows = load_workflows(project)
+    release = workflows["release.yml"]
+    build = release["jobs"]["build"]
+    publish = release["jobs"]["publish"]
+    publish_text = yaml.safe_dump(publish)
+
+    assert build["if"] == (
+        "github.event.workflow_run.conclusion == 'success' && "
+        "github.event.workflow_run.event != 'pull_request'"
+    )
+    assert publish["needs"] == "build"
+    assert publish["if"] == "startsWith(github.event.workflow_run.head_branch, 'v')"
+    assert publish["environment"] == "production"
+    assert publish["permissions"] == {"contents": "write"}
+    assert [step["name"] for step in publish["steps"]] == [
+        "Download release artifacts",
+        "Publish GitHub Release",
+    ]
+    assert "actions/download-artifact@" in publish_text
+    for forbidden in ("checkout", "Devbox", "devbox", "bun ", "uv ", "cargo "):
+        assert forbidden not in publish_text
+    assert (
+        'gh release create "${{ github.event.workflow_run.head_branch }}" --generate-notes'
+        in (project / ".github" / "workflows" / "release.yml").read_text()
+    )
+
+    build_steps = {step["name"]: step for step in build["steps"]}
+    assert "Build project artifacts" in build_steps
+    assert "devbox run build" in build_steps["Build project artifacts"]["run"]
+    assert "Upload Hono deploy artifact" in build_steps
+    assert "Upload release artifacts" in build_steps
+
+
+def test_pipeline_validate_never_builds_and_deploy_never_rebuilds(
+    render: Render,
+) -> None:
+    project = render(
+        "ConsumeArtifacts",
+        {
+            "components": ["backend"],
+            "backend_variants": ["hono"],
+            "frontend_variant": "astro",
+        },
+    )
+    workflows = load_workflows(project)
+    validate = (project / ".github" / "workflows" / "validate.yml").read_text()
+    deploy = (project / ".github" / "workflows" / "deploy.yml").read_text()
+    deploy_data = workflows["deploy.yml"]
+    deploy_steps = {
+        step["name"]: step for step in deploy_data["jobs"]["deploy"]["steps"]
+    }
+
+    assert "devbox run check" in validate
+    assert "devbox run test" in validate
+    assert "devbox run build" not in validate
+    assert "devbox run build" not in deploy
+    assert "Download Hono deploy artifact" in deploy_steps
+    assert deploy_steps["Download Hono deploy artifact"]["with"] == {
+        "name": "hono-dist",
+        "path": "backend/hono",
+    }
+    assert "Release Hono Worker" in deploy_steps
+    assert deploy_steps["Release Hono Worker"]["run"] == (
+        'bun run --cwd backend/hono release:"$DEPLOYMENT_ENV"'
+    )
 
 
 def test_workflows_use_separate_commands_and_release_write_isolation(
@@ -135,23 +247,17 @@ def test_workflows_use_separate_commands_and_release_write_isolation(
 ) -> None:
     project = render("Default")
     workflows = load_workflows(project)
-    check = (project / ".github" / "workflows" / "check.yml").read_text()
-    test = (project / ".github" / "workflows" / "test.yml").read_text()
-    build = (project / ".github" / "workflows" / "build.yml").read_text()
+    validate = (project / ".github" / "workflows" / "validate.yml").read_text()
     release = workflows["release.yml"]
-    prepare = release["jobs"]["prepare"]
     publish = release["jobs"]["publish"]
     publish_text = yaml.safe_dump(publish)
 
-    assert "devbox run check" in check
-    assert "devbox run test" not in check
-    assert "devbox run build" not in check
-    assert "devbox run test" in test
-    assert "test-e2e:" not in test
-    assert "devbox run build" in build
-    assert prepare["permissions"] == {"contents": "read"}
+    assert "devbox run check" in validate
+    assert "devbox run test" in validate
+    assert "devbox run build" not in validate
+    assert release["permissions"] == {"contents": "read"}
     assert publish["permissions"] == {"contents": "write"}
-    assert publish["needs"] == "prepare"
+    assert publish["needs"] == "build"
     assert [step["name"] for step in publish["steps"]] == [
         "Download release artifacts",
         "Publish GitHub Release",
@@ -161,10 +267,6 @@ def test_workflows_use_separate_commands_and_release_write_isolation(
         assert forbidden not in publish_text
     assert (
         "GH_TOKEN: ${{ github.token }}"
-        in (project / ".github" / "workflows" / "release.yml").read_text()
-    )
-    assert (
-        'tags:\n      - "v*"'
         in (project / ".github" / "workflows" / "release.yml").read_text()
     )
 
@@ -187,22 +289,17 @@ def test_buildx_is_conditional_and_precedes_fastapi_builds(render: Render) -> No
         },
     )
 
-    for name in ("build.yml", "release.yml"):
-        text = (fastapi / ".github" / "workflows" / name).read_text()
-        assert text.index("Set up Docker Buildx") < text.index("devbox run build")
-        assert (
-            "docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1"
-            in text
-        )
-        assert "--cache-from type=gha,scope=fastapi" in text
-        assert "--cache-to type=gha,mode=max,scope=fastapi" in text
-    cloudflare = (
-        composed / ".github" / "workflows" / "cloudflare-deploy.yml"
-    ).read_text()
-    assert cloudflare.index("Set up Docker Buildx") < cloudflare.index(
-        "devbox run build"
+    release = (fastapi / ".github" / "workflows" / "release.yml").read_text()
+    assert release.index("Set up Docker Buildx") < release.index("devbox run build")
+    assert (
+        "docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1"
+        in release
     )
-    assert "DOCKER_CACHE_ARGS" in cloudflare
+    assert "--cache-from type=gha,scope=fastapi" in release
+    assert "--cache-to type=gha,mode=max,scope=fastapi" in release
+    deploy = (composed / ".github" / "workflows" / "deploy.yml").read_text()
+    assert "Set up Docker Buildx" not in deploy
+    assert "DOCKER_CACHE_ARGS" not in deploy
     assert "Set up Docker Buildx" not in "\n".join(
         path.read_text() for path in workflow_paths(hono)
     )
@@ -264,12 +361,12 @@ def test_playwright_installs_once_per_job_and_runs_both_suites(render: Render) -
             "client_playwright": True,
         },
     )
-    test = (project / ".github" / "workflows" / "test.yml").read_text()
+    validate = (project / ".github" / "workflows" / "validate.yml").read_text()
     release = (project / ".github" / "workflows" / "release.yml").read_text()
     scripts = yaml.safe_load((project / "devbox.json").read_text())["shell"]["scripts"]
 
-    assert test.count("playwright install --with-deps chromium") == 1
-    assert release.count("playwright install --with-deps chromium") == 1
+    assert validate.count("playwright install --with-deps chromium") == 1
+    assert "playwright" not in release
     assert scripts["test:e2e"] == [
         "bun run --cwd frontend test:e2e",
         "bun run --cwd client test:e2e",
