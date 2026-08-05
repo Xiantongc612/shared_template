@@ -3,28 +3,25 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_run:
+    workflows: ["Validate"]
+    types: [completed]
 
 permissions:
   contents: read
 
-concurrency:
-  group: release-{% raw %}${{ github.ref }}{% endraw %}
-  cancel-in-progress: false
-
 jobs:
-  prepare:
+  build:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event != 'pull_request'
     runs-on: {{ versions.ubuntu_runner }}
     timeout-minutes: 120
-    permissions:
-      contents: read
     steps:
-      - name: Check out repository
+      - name: Check out triggering commit
         uses: actions/checkout@{{ versions.checkout_action_sha }} # {{ versions.checkout_action }}
         with:
-          fetch-depth: 0
+          ref: {% raw %}${{ github.event.workflow_run.head_sha }}{% endraw %}
           persist-credentials: false
 {% if 'backend' in components and 'fastapi' in backend_variants %}
       - name: Set up Docker Buildx
@@ -45,6 +42,11 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
           key: cargo-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.rust }}-{% raw %}${{ hashFiles('client/src-tauri/Cargo.toml') }}{% endraw %}
+      - name: Install Tauri system dependencies
+        run: >-
+          sudo apt-get update && sudo apt-get install -y
+          libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev
+          libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf libfuse2
 {% endif %}
 {% if 'backend' in components and 'fastapi' in backend_variants %}
       - name: Cache uv downloads
@@ -52,22 +54,6 @@ jobs:
         with:
           path: ~/.cache/uv
           key: uv-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.python_runtime }}-{{ versions.uv }}-{% raw %}${{ hashFiles('backend/fastapi/pyproject.toml') }}{% endraw %}
-{% endif %}
-{% if frontend_playwright | default(false) or client_playwright | default(false) %}
-      - name: Cache Playwright browsers
-        uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.playwright }}
-{% endif %}
-      - name: Install system dependencies
-        run: >-
-          sudo apt-get update && sudo apt-get install -y
-{% if 'client' in components %}
-          libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev
-          libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf libfuse2
-{% else %}
-          tar
 {% endif %}
       - name: Install Devbox
         uses: jetify-com/devbox-install-action@{{ versions.devbox_action_sha }} # {{ versions.devbox_action }}
@@ -78,58 +64,66 @@ jobs:
           disable-nix-access-token: true
       - name: Initialize project
         run: devbox run init
-      - name: Check project
-        run: devbox run check
-      - name: Run unit tests
-        run: devbox run test
-{% if frontend_playwright | default(false) or client_playwright | default(false) %}
-      - name: Install Chromium
-{% if frontend_playwright | default(false) %}
-        run: bun run --cwd frontend playwright install --with-deps chromium
-{% else %}
-        run: bun run --cwd client playwright install --with-deps chromium
-{% endif %}
-      - name: Run end-to-end tests
-        run: devbox run test:e2e
-{% endif %}
       - name: Build project artifacts
 {% if 'backend' in components and 'fastapi' in backend_variants %}
         env:
           DOCKER_CACHE_ARGS: --cache-from type=gha,scope=fastapi --cache-to type=gha,mode=max,scope=fastapi
 {% endif %}
         run: devbox run build
-      - name: Prepare release artifacts
-        run: mkdir -p release-artifacts
 {% if 'frontend' in components %}
       - name: Archive frontend artifact
-        run: tar -czf release-artifacts/frontend.tar.gz -C frontend dist
+        if: startsWith(github.event.workflow_run.head_branch, 'v')
+        run: mkdir -p release-artifacts && tar -czf release-artifacts/frontend.tar.gz -C frontend dist
 {% endif %}
 {% if 'client' in components %}
       - name: Collect client artifacts
+        if: startsWith(github.event.workflow_run.head_branch, 'v')
         run: >-
+          mkdir -p release-artifacts &&
           cp client/src-tauri/target/release/bundle/deb/*.deb
           client/src-tauri/target/release/bundle/appimage/*.AppImage
           release-artifacts/
 {% endif %}
 {% if 'backend' in components and 'hono' in backend_variants %}
       - name: Archive Hono artifact
-        run: tar -czf release-artifacts/hono-worker.tar.gz -C backend/hono dist
+        if: startsWith(github.event.workflow_run.head_branch, 'v')
+        run: mkdir -p release-artifacts && tar -czf release-artifacts/hono-worker.tar.gz -C backend/hono dist
 {% endif %}
 {% if 'backend' in components and 'fastapi' in backend_variants %}
       - name: Collect FastAPI artifact
-        run: cp backend/fastapi/dist/fastapi-backend.tar release-artifacts/
+        if: startsWith(github.event.workflow_run.head_branch, 'v')
+        run: mkdir -p release-artifacts && cp backend/fastapi/dist/fastapi-backend.tar release-artifacts/
 {% endif %}
       - name: Upload release artifacts
+        if: startsWith(github.event.workflow_run.head_branch, 'v')
         uses: actions/upload-artifact@{{ versions.upload_artifact_action_sha }} # {{ versions.upload_artifact_action }}
         with:
           name: release-artifacts
           path: release-artifacts/
           if-no-files-found: error
+{% if 'frontend' in components and frontend_variant == 'astro' %}
+      - name: Upload Astro deploy artifact
+        uses: actions/upload-artifact@{{ versions.upload_artifact_action_sha }} # {{ versions.upload_artifact_action }}
+        with:
+          name: astro-dist
+          path: frontend/dist
+          if-no-files-found: error
+{% endif %}
+{% if 'backend' in components and 'hono' in backend_variants %}
+      - name: Upload Hono deploy artifact
+        uses: actions/upload-artifact@{{ versions.upload_artifact_action_sha }} # {{ versions.upload_artifact_action }}
+        with:
+          name: hono-dist
+          path: backend/hono/dist
+          if-no-files-found: error
+{% endif %}
 
   publish:
-    needs: prepare
+    needs: build
+    if: startsWith(github.event.workflow_run.head_branch, 'v')
     runs-on: {{ versions.ubuntu_runner }}
     timeout-minutes: 10
+    environment: production
     permissions:
       contents: write
     steps:
@@ -142,5 +136,5 @@ jobs:
         env:
           GH_TOKEN: {% raw %}${{ github.token }}{% endraw %}
         run: >-
-          gh release create "$GITHUB_REF_NAME" --generate-notes
+          gh release create "{% raw %}${{ github.event.workflow_run.head_branch }}{% endraw %}" --generate-notes
           release-artifacts/*

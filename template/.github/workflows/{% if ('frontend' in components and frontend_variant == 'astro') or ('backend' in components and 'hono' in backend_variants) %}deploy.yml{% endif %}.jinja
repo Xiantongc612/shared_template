@@ -1,62 +1,54 @@
 {% from "template/_versions.jinja" import versions -%}
 ---
-name: Deploy Cloudflare
+name: Deploy
 
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - "v*"
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
 
 permissions:
   contents: read
 
 jobs:
   deploy:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event != 'pull_request'
     runs-on: {{ versions.ubuntu_runner }}
     timeout-minutes: 60
-    environment: {% raw %}${{ startsWith(github.ref, 'refs/tags/v') && 'production' || 'staging' }}{% endraw %}
+    environment: {% raw %}${{ github.event.workflow_run.head_branch == 'main' && 'staging' || 'production' }}{% endraw %}
     concurrency:
-      group: cloudflare-{% raw %}${{ startsWith(github.ref, 'refs/tags/v') && 'production' || 'staging' }}{% endraw %}
+      group: cloudflare-{% raw %}${{ github.event.workflow_run.head_branch == 'main' && 'staging' || 'production' }}{% endraw %}
       cancel-in-progress: false
     env:
-      DEPLOYMENT_ENV: {% raw %}${{ startsWith(github.ref, 'refs/tags/v') && 'production' || 'staging' }}{% endraw %}
+      DEPLOYMENT_ENV: {% raw %}${{ github.event.workflow_run.head_branch == 'main' && 'staging' || 'production' }}{% endraw %}
+      GITHUB_SHA: {% raw %}${{ github.event.workflow_run.head_sha }}{% endraw %}
     steps:
-      - name: Check out repository
+      - name: Check out triggering commit
         uses: actions/checkout@{{ versions.checkout_action_sha }} # {{ versions.checkout_action }}
         with:
+          ref: {% raw %}${{ github.event.workflow_run.head_sha }}{% endraw %}
           persist-credentials: false
-{% if 'backend' in components and 'fastapi' in backend_variants %}
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@{{ versions.buildx_action_sha }} # {{ versions.buildx_action }}
+{% if 'backend' in components and 'hono' in backend_variants %}
+      - name: Download Hono deploy artifact
+        uses: actions/download-artifact@{{ versions.download_artifact_action_sha }} # {{ versions.download_artifact_action }}
+        with:
+          name: hono-dist
+          path: backend/hono
+{% endif %}
+{% if 'frontend' in components and frontend_variant == 'astro' %}
+      - name: Download Astro deploy artifact
+        uses: actions/download-artifact@{{ versions.download_artifact_action_sha }} # {{ versions.download_artifact_action }}
+        with:
+          name: astro-dist
+          path: frontend
 {% endif %}
       - name: Cache Bun downloads
         uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
         with:
           path: ~/.bun/install/cache
           key: bun-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.bun }}-{% raw %}${{ hashFiles('**/package.json') }}{% endraw %}
-{% if 'client' in components %}
-      - name: Cache Cargo downloads
-        uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-          key: cargo-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.rust }}-{% raw %}${{ hashFiles('client/src-tauri/Cargo.toml') }}{% endraw %}
-      - name: Install Tauri system dependencies
-        run: >-
-          sudo apt-get update && sudo apt-get install -y
-          libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev
-          libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf libfuse2
-{% endif %}
-{% if 'backend' in components and 'fastapi' in backend_variants %}
-      - name: Cache uv downloads
-        uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
-        with:
-          path: ~/.cache/uv
-          key: uv-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.python_runtime }}-{{ versions.uv }}-{% raw %}${{ hashFiles('backend/fastapi/pyproject.toml') }}{% endraw %}
-{% endif %}
       - name: Install Devbox
         uses: jetify-com/devbox-install-action@{{ versions.devbox_action_sha }} # {{ versions.devbox_action }}
         with:
@@ -124,12 +116,6 @@ jobs:
           TF_VAR_cloudflare_account_id: {% raw %}${{ secrets.CLOUDFLARE_ACCOUNT_ID }}{% endraw %}
         run: tofu -chdir=frontend/infrastructure/environments/"$DEPLOYMENT_ENV" apply -auto-approve
 {% endif %}
-      - name: Build project artifacts
-{% if 'backend' in components and 'fastapi' in backend_variants %}
-        env:
-          DOCKER_CACHE_ARGS: --cache-from type=gha,scope=fastapi --cache-to type=gha,mode=max,scope=fastapi
-{% endif %}
-        run: devbox run build
 {% if 'backend' in components and 'hono' in backend_variants %}
       - name: Release Hono Worker
         env:
