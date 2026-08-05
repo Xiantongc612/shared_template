@@ -3,9 +3,9 @@ from pathlib import Path
 import yaml
 from support import ROOT, Render
 
-FETCH_METADATA_SHA = "21025c705c08248db411dc16f3619e6b5f9ea21a"
+FETCH_METADATA_SHA = "25dd0e34f4fe68f24cc83900b1fe3fe149efef98"
 FETCH_METADATA_REF = f"dependabot/fetch-metadata@{FETCH_METADATA_SHA}"
-FETCH_METADATA_PIN = f"{FETCH_METADATA_REF} # v2.5.0"
+FETCH_METADATA_PIN = f"{FETCH_METADATA_REF} # v3.1.0"
 
 
 def dependabot_entries(project: Path) -> set[tuple[str, str]]:
@@ -25,7 +25,7 @@ def test_repository_dependabot_covers_actions_python_and_pre_commit() -> None:
         ("uv", "/"),
     }
     assert all(
-        update["schedule"]["interval"] == "weekly" for update in config["updates"]
+        update["schedule"]["interval"] == "daily" for update in config["updates"]
     )
 
 
