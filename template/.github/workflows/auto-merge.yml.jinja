@@ -1,0 +1,32 @@
+{% from "template/_versions.jinja" import versions -%}
+name: Dependabot auto-merge
+
+on:
+  pull_request_target:
+    types: [opened, synchronize]
+
+permissions:
+  pull-requests: write
+  contents: write
+
+concurrency:
+  group: auto-merge-{% raw %}${{ github.event.pull_request.number }}{% endraw %}
+  cancel-in-progress: true
+
+jobs:
+  auto-merge:
+    runs-on: {{ versions.ubuntu_runner }}
+    timeout-minutes: 10
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - name: Fetch Dependabot metadata
+        uses: dependabot/fetch-metadata@{{ versions.fetch_metadata_action_sha }} # {{ versions.fetch_metadata_action }}
+        id: metadata
+        with:
+          github-token: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
+      - name: Enable auto-merge for patch updates
+        if: steps.metadata.outputs.update-type == 'version-update:semver-patch'
+        run: gh pr merge --auto --squash {% raw %}"$PR_URL"{% endraw %}
+        env:
+          PR_URL: {% raw %}${{ github.event.pull_request.html_url }}{% endraw %}
+          GITHUB_TOKEN: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}

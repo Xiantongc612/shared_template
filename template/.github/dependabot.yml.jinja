@@ -1,0 +1,53 @@
+---
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+{% if 'frontend' in components %}
+  - package-ecosystem: bun
+    directory: /frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+{% if frontend_variant == 'astro' %}
+  - package-ecosystem: opentofu
+    directory: /frontend/infrastructure
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+{% endif %}
+{% endif %}
+{% if 'client' in components %}
+  - package-ecosystem: bun
+    directory: /client
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+  - package-ecosystem: cargo
+    directory: /client/src-tauri
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+{% endif %}
+{% if 'backend' in components and 'hono' in backend_variants %}
+  - package-ecosystem: bun
+    directory: /backend/hono
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+  - package-ecosystem: opentofu
+    directory: /backend/hono/infrastructure
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+{% endif %}
+{% if 'backend' in components and 'fastapi' in backend_variants %}
+  - package-ecosystem: uv
+    directory: /backend/fastapi
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+{% endif %}
