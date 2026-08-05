@@ -142,7 +142,7 @@ None.
 ### Implemented scope
 
 - The repository `.github/dependabot.yml` enables `github-actions`, `uv`, and
-  `pre-commit` on a weekly schedule with bounded pull request limits.
+  `pre-commit` on a daily schedule with bounded pull request limits.
 - The repository `.github/workflows/auto-merge.yml` auto-merges Dependabot patch
   updates behind the `dependabot[bot]` actor guard.
 - `template/.github/dependabot.yml.jinja` renders `github-actions` always and
