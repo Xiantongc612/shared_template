@@ -6,7 +6,10 @@ test("shows the site heading", async ({ page }) => {
   const siteName = "{{ project_name }}";
   await expect(page.getByText(siteName)).toBeVisible();
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-{% if frontend_ai_sdk -%}
-  await expect(page.locator("html")).toHaveAttribute("data-ai-sdk", "available");
+{% if frontend_ai_sdk %}
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-ai-sdk",
+    "available",
+  );
 {% endif -%}
 });
