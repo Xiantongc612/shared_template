@@ -83,7 +83,7 @@
         "bun run --cwd backend/hono build"{% if 'fastapi' in backend_variants or 'scripts' in components %},{% endif %}{% endif %}{% if 'backend' in components and 'fastapi' in backend_variants %}
         "mkdir -p backend/fastapi/dist",
         "docker buildx build ${DOCKER_CACHE_ARGS:-} --output type=oci,dest=backend/fastapi/dist/fastapi-backend.tar backend/fastapi"{% if 'scripts' in components %},{% endif %}{% endif %}{% if 'scripts' in components %}
-        "uv run --project scripts python -m compileall -q scripts/src"{% endif %}
+        "uv run --project scripts python -m compileall -q scripts/src scripts/main.py"{% endif %}
       ]
     }
   }

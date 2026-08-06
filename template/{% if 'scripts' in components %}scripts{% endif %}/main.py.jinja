@@ -1,0 +1,56 @@
+"""Example utility script entry point.
+
+Demonstrates argparse with automatic ``--help`` and two mock subcommands.
+Replace the handlers with real utility behavior.
+
+Run from the repository root:
+
+    uv run --project scripts python scripts/main.py --help
+    uv run --project scripts python scripts/main.py greet --name Ada
+    uv run --project scripts python scripts/main.py repeat "hello" --count 3
+"""
+
+import argparse
+from collections.abc import Callable, Sequence
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="main",
+        description="Example utility script with mock subcommands.",
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    greet = subparsers.add_parser("greet", help="Print a greeting.")
+    greet.add_argument("--name", default="world", help="Name to greet.")
+
+    repeat = subparsers.add_parser("repeat", help="Print a message repeatedly.")
+    repeat.add_argument("message", help="Message to print.")
+    repeat.add_argument("--count", type=int, default=2, help="Number of repetitions.")
+    return parser
+
+
+def _greet(args: argparse.Namespace) -> int:
+    print(f"Hello, {args.name}!")
+    return 0
+
+
+def _repeat(args: argparse.Namespace) -> int:
+    for _ in range(args.count):
+        print(args.message)
+    return 0
+
+
+_HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
+    "greet": _greet,
+    "repeat": _repeat,
+}
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    args = _build_parser().parse_args(argv)
+    return _HANDLERS[args.command](args)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

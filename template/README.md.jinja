@@ -120,7 +120,13 @@ The Docker build creates a local OCI-compatible image and does not publish it.
 ## Python Scripts
 
 The independent utility script workspace is in `scripts/`. The `utility-scripts`
-console script exposes the example CLI entry point.
+console script exposes the example CLI entry point, and `scripts/main.py` is a
+standalone argparse example with mock subcommands:
+
+```sh
+uv run --project scripts python scripts/main.py --help
+uv run --project scripts python scripts/main.py greet --name Ada
+```
 
 ```sh
 uv sync --project scripts

@@ -403,6 +403,7 @@ def validate_fastapi_oci(project: Path) -> None:
 def validate_scripts_component(
     project: Path, environment: Mapping[str, str] | None = None
 ) -> None:
+    command_environment = environment or os.environ.copy()
     run(
         [
             "uv",
@@ -414,7 +415,20 @@ def validate_scripts_component(
             "integration",
         ],
         project,
-        environment or os.environ.copy(),
+        command_environment,
+    )
+    run(
+        [
+            "uv",
+            "run",
+            "--project",
+            "scripts",
+            "python",
+            "scripts/main.py",
+            "--help",
+        ],
+        project,
+        command_environment,
     )
 
 

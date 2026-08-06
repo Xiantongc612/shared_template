@@ -68,7 +68,7 @@ def test_scripts_commands_compile_sources_as_build(render: Render) -> None:
     assert "uv run --project scripts ty check scripts/src" in devbox_scripts["check"]
     assert "uv run --project scripts pytest scripts" in devbox_scripts["test"]
     assert devbox_scripts["build"] == [
-        "uv run --project scripts python -m compileall -q scripts/src"
+        "uv run --project scripts python -m compileall -q scripts/src scripts/main.py"
     ]
     assert not any("build" in command for command in devbox_scripts["test"])
     assert not any("pytest" in command for command in devbox_scripts["check"])

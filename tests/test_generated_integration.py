@@ -333,7 +333,7 @@ def test_fastapi_validator_rejects_malformed_descriptor(tmp_path: Path) -> None:
         integration.validate_fastapi_oci(tmp_path)
 
 
-def test_scripts_validator_runs_generated_console_script(
+def test_scripts_validator_runs_generated_console_script_and_main(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     calls: list[list[str]] = []
@@ -357,6 +357,15 @@ def test_scripts_validator_runs_generated_console_script(
         "utility-scripts",
         "--name",
         "integration",
+    ]
+    assert calls[1] == [
+        "uv",
+        "run",
+        "--project",
+        "scripts",
+        "python",
+        "scripts/main.py",
+        "--help",
     ]
 
 

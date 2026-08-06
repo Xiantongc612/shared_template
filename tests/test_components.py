@@ -216,8 +216,10 @@ def test_scripts_generator_and_optional_integrations(render: Render) -> None:
     assert '"duckdb==' in pyproject
     assert (workspace / "src" / "utility_scripts" / "analysis.py").is_file()
     assert (workspace / "src" / "utility_scripts" / "data.py").is_file()
+    assert (workspace / "main.py").is_file()
     assert (workspace / "tests" / "test_analysis.py").is_file()
     assert (workspace / "tests" / "test_data.py").is_file()
+    assert (workspace / "tests" / "test_main.py").is_file()
     assert not (project / "frontend").exists()
     assert not (project / "backend").exists()
 
@@ -230,6 +232,7 @@ def test_scripts_minimal_omits_optional_integration_files(render: Render) -> Non
     assert "duckdb" not in pyproject
     assert "pandas" not in pyproject
     assert (workspace / "src" / "utility_scripts" / "cli.py").is_file()
+    assert (workspace / "main.py").is_file()
     assert not (workspace / "src" / "utility_scripts" / "analysis.py").exists()
     assert not (workspace / "src" / "utility_scripts" / "data.py").exists()
     assert not (workspace / "tests" / "test_analysis.py").exists()
