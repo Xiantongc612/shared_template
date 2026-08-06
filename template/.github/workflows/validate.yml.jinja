@@ -33,6 +33,7 @@ jobs:
         with:
           path: ~/.bun/install/cache
           key: bun-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.bun }}-{% raw %}${{ hashFiles('**/package.json') }}{% endraw %}
+          restore-keys: bun-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.bun }}-
 {% endif %}
 {% if 'client' in components %}
       - name: Cache Cargo downloads
@@ -42,6 +43,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
           key: cargo-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.rust }}-{% raw %}${{ hashFiles('client/src-tauri/Cargo.toml') }}{% endraw %}
+          restore-keys: cargo-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.rust }}-
       - name: Install Tauri system dependencies
         run: >-
           sudo apt-get update && sudo apt-get install -y
@@ -54,6 +56,7 @@ jobs:
         with:
           path: ~/.cache/uv
           key: uv-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.python_runtime }}-{{ versions.uv }}-{% raw %}${{ hashFiles('backend/fastapi/pyproject.toml') }}{% endraw %}
+          restore-keys: uv-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.python_runtime }}-{{ versions.uv }}-
 {% endif %}
       - name: Install Devbox
         uses: jetify-com/devbox-install-action@{{ versions.devbox_action_sha }} # {{ versions.devbox_action }}
@@ -81,6 +84,7 @@ jobs:
         with:
           path: ~/.bun/install/cache
           key: bun-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.bun }}-{% raw %}${{ hashFiles('**/package.json') }}{% endraw %}
+          restore-keys: bun-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.bun }}-
 {% endif %}
 {% if 'client' in components %}
       - name: Cache Cargo downloads
@@ -90,6 +94,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
           key: cargo-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.rust }}-{% raw %}${{ hashFiles('client/src-tauri/Cargo.toml') }}{% endraw %}
+          restore-keys: cargo-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.rust }}-
       - name: Install Tauri system dependencies
         run: >-
           sudo apt-get update && sudo apt-get install -y
@@ -102,6 +107,7 @@ jobs:
         with:
           path: ~/.cache/uv
           key: uv-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.python_runtime }}-{{ versions.uv }}-{% raw %}${{ hashFiles('backend/fastapi/pyproject.toml') }}{% endraw %}
+          restore-keys: uv-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.python_runtime }}-{{ versions.uv }}-
 {% endif %}
       - name: Install Devbox
         uses: jetify-com/devbox-install-action@{{ versions.devbox_action_sha }} # {{ versions.devbox_action }}
@@ -129,11 +135,13 @@ jobs:
         with:
           path: ~/.bun/install/cache
           key: bun-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.bun }}-{% raw %}${{ hashFiles('**/package.json') }}{% endraw %}
+          restore-keys: bun-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.bun }}-
       - name: Cache Playwright browsers
         uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
         with:
           path: ~/.cache/ms-playwright
           key: playwright-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.playwright }}
+          restore-keys: playwright-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-
       - name: Install Devbox
         uses: jetify-com/devbox-install-action@{{ versions.devbox_action_sha }} # {{ versions.devbox_action }}
         with:
