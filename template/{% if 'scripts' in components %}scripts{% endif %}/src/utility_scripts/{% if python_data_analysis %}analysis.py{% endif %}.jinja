@@ -1,0 +1,16 @@
+"""Local data analysis helpers (opt-in)."""
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+__all__ = ["plot", "summarize"]
+
+
+def summarize(values: list[float]) -> pd.Series:
+    return pd.Series(values).describe()
+
+
+def plot(values: list[float]) -> None:
+    plt.plot(np.asarray(values))
+    plt.close()

@@ -1,0 +1,11 @@
+from utility_scripts.cli import main
+
+
+def test_main_greets_default(capsys) -> None:
+    assert main([]) == 0
+    assert "Hello, world!" in capsys.readouterr().out
+
+
+def test_main_greets_custom_name(capsys) -> None:
+    assert main(["--name", "integration"]) == 0
+    assert "Hello, integration!" in capsys.readouterr().out

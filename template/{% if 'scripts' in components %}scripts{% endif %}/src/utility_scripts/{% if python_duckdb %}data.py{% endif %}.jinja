@@ -1,0 +1,21 @@
+"""DuckDB helpers (opt-in)."""
+
+import duckdb
+
+__all__ = ["row_count"]
+
+
+def row_count(rows: list[tuple[int, str]]) -> int:
+    if not rows:
+        return 0
+    connection = duckdb.connect()
+    try:
+        placeholders = ", ".join("(?, ?)" for _ in rows)
+        query = "SELECT count(*) FROM (VALUES " + placeholders + ") AS t(id, label)"
+        values: list[object] = [value for row in rows for value in row]
+        result = connection.execute(query, values).fetchone()
+        if result is None:
+            return 0
+        return int(result[0])
+    finally:
+        connection.close()

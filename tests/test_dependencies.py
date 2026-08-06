@@ -9,7 +9,7 @@ def test_generated_direct_dependencies_are_exact_without_lockfiles(
     render: Render,
 ) -> None:
     answers = {
-        "components": ["frontend", "client", "backend"],
+        "components": ["frontend", "client", "backend", "scripts"],
         "backend_variants": ["hono", "fastapi"],
         "frontend_playwright": True,
         "frontend_ai_sdk": True,
@@ -21,6 +21,8 @@ def test_generated_direct_dependencies_are_exact_without_lockfiles(
         "client_i18next": True,
         "hono_ai_sdk": True,
         "fastapi_pydantic_ai": True,
+        "python_data_analysis": True,
+        "python_duckdb": True,
     }
     project = render("ExactDependencies", answers)
     astro = render(
@@ -58,6 +60,19 @@ def test_generated_direct_dependencies_are_exact_without_lockfiles(
         "==" in requirement for requirement in fastapi["dependency-groups"]["dev"]
     )
 
+    scripts = tomllib.loads((project / "scripts" / "pyproject.toml").read_text())
+    assert all(
+        "==" in requirement for requirement in scripts["project"]["dependencies"]
+    )
+    assert all(
+        "==" in requirement for requirement in scripts["dependency-groups"]["dev"]
+    )
+    assert scripts["project"]["scripts"] == {
+        "utility-scripts": "utility_scripts.cli:main"
+    }
+    assert scripts["project"]["name"] == "utility-scripts"
+    assert scripts["build-system"]["build-backend"] == "hatchling.build"
+
     cargo = tomllib.loads((project / "client" / "src-tauri" / "Cargo.toml").read_text())
     cargo_versions = [
         cargo["build-dependencies"]["tauri-build"]["version"],
@@ -93,8 +108,10 @@ def test_generated_versions_are_consistent_across_owned_files(render: Render) ->
     project = render(
         "VersionRelationships",
         {
-            "components": ["frontend", "client", "backend"],
+            "components": ["frontend", "client", "backend", "scripts"],
             "backend_variants": ["hono", "fastapi"],
+            "python_data_analysis": True,
+            "python_duckdb": True,
         },
     )
     devbox = json.loads((project / "devbox.json").read_text())
@@ -141,6 +158,22 @@ def test_generated_versions_are_consistent_across_owned_files(render: Render) ->
     )
     pre_commit = (project / ".pre-commit-config.yaml").read_text()
     assert f"rev: v{packages['gitleaks']}" in pre_commit
+
+    fastapi_pyproject = tomllib.loads(
+        (project / "backend" / "fastapi" / "pyproject.toml").read_text()
+    )
+    scripts_pyproject = tomllib.loads(
+        (project / "scripts" / "pyproject.toml").read_text()
+    )
+    assert (
+        scripts_pyproject["project"]["requires-python"]
+        == fastapi_pyproject["project"]["requires-python"]
+    )
+    assert (
+        scripts_pyproject["tool"]["ty"]["environment"]["python-version"]
+        == fastapi_pyproject["tool"]["ty"]["environment"]["python-version"]
+    )
+    assert scripts_pyproject["project"]["dependencies"][0] == "duckdb==1.5.5"
 
 
 def test_version_registry_is_not_generated(render: Render) -> None:

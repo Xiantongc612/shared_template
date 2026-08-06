@@ -197,6 +197,45 @@ def test_fastapi_generator_and_optional_ai(render: Render) -> None:
     assert not (project / "backend" / "hono").exists()
 
 
+def test_scripts_generator_and_optional_integrations(render: Render) -> None:
+    project = render(
+        "ScriptsAll",
+        {
+            "components": ["scripts"],
+            "python_data_analysis": True,
+            "python_duckdb": True,
+        },
+    )
+    workspace = project / "scripts"
+    pyproject = (workspace / "pyproject.toml").read_text()
+
+    assert '"pandas==' in pyproject
+    assert '"numpy==' in pyproject
+    assert '"matplotlib==' in pyproject
+    assert '"jupyter==' in pyproject
+    assert '"duckdb==' in pyproject
+    assert (workspace / "src" / "utility_scripts" / "analysis.py").is_file()
+    assert (workspace / "src" / "utility_scripts" / "data.py").is_file()
+    assert (workspace / "tests" / "test_analysis.py").is_file()
+    assert (workspace / "tests" / "test_data.py").is_file()
+    assert not (project / "frontend").exists()
+    assert not (project / "backend").exists()
+
+
+def test_scripts_minimal_omits_optional_integration_files(render: Render) -> None:
+    project = render("ScriptsMinimal", {"components": ["scripts"]})
+    workspace = project / "scripts"
+    pyproject = (workspace / "pyproject.toml").read_text()
+
+    assert "duckdb" not in pyproject
+    assert "pandas" not in pyproject
+    assert (workspace / "src" / "utility_scripts" / "cli.py").is_file()
+    assert not (workspace / "src" / "utility_scripts" / "analysis.py").exists()
+    assert not (workspace / "src" / "utility_scripts" / "data.py").exists()
+    assert not (workspace / "tests" / "test_analysis.py").exists()
+    assert not (workspace / "tests" / "test_data.py").exists()
+
+
 def test_all_components_have_independent_boundaries(render: Render) -> None:
     project = render(
         "FullStack",

@@ -1,0 +1,43 @@
+{% from "template/_versions.jinja" import versions -%}
+[project]
+name = "utility-scripts"
+version = "{{ versions.project }}"
+requires-python = ">={{ versions.python }}"
+dependencies = [
+{% if python_duckdb %}    "duckdb=={{ versions.duckdb }}",
+{% endif %}{% if python_data_analysis %}    "pandas=={{ versions.pandas }}",
+    "numpy=={{ versions.numpy }}",
+    "matplotlib=={{ versions.matplotlib }}",
+    "jupyter=={{ versions.jupyter }}",
+{% endif %}]
+
+[project.scripts]
+utility-scripts = "utility_scripts.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest=={{ versions.pytest }}",
+    "ruff=={{ versions.ruff }}",
+    "ty=={{ versions.ty }}",
+]
+
+[build-system]
+requires = ["hatchling=={{ versions.hatchling }}"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/utility_scripts"]
+
+[tool.uv]
+package = true
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py{{ versions.python | replace('.', '') }}"
+src = ["src", "tests"]
+
+[tool.ty.environment]
+python-version = "{{ versions.python }}"

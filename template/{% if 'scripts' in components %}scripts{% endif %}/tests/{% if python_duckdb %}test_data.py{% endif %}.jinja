@@ -1,0 +1,5 @@
+from utility_scripts.data import row_count
+
+
+def test_row_count_counts_rows() -> None:
+    assert row_count([(1, "a"), (2, "b"), (3, "c")]) == 3
