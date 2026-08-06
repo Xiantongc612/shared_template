@@ -100,7 +100,7 @@ def test_repository_auto_merge_is_guarded_and_pinned() -> None:
         "pull_request_target": {"types": ["opened", "synchronize"]}
     }
     assert job["if"] == "github.actor == 'dependabot[bot]'"
-    assert job["runs-on"] == "ubuntu-22.04"
+    assert job["runs-on"] == "ubuntu-24.04"
     assert job["timeout-minutes"] == 10
     assert steps[0]["uses"] == FETCH_METADATA_REF
     assert (
