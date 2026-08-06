@@ -44,16 +44,18 @@ jobs:
           name: astro-dist
           path: frontend
 {% endif %}
+{% if cache_downloads | default(true) %}
       - name: Cache Bun downloads
         uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
         with:
           path: ~/.bun/install/cache
           key: bun-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.bun }}-{% raw %}${{ hashFiles('**/package.json') }}{% endraw %}
           restore-keys: bun-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.bun }}-
+{% endif %}
       - name: Install Devbox
         uses: jetify-com/devbox-install-action@{{ versions.devbox_action_sha }} # {{ versions.devbox_action }}
         with:
-          enable-cache: true
+          enable-cache: {{ "true" if cache_nix | default(true) else "false" }}
           devbox-version: {{ versions.devbox_cli }}
           sha256-checksum: {{ versions.devbox_cli_checksum }}
           disable-nix-access-token: true

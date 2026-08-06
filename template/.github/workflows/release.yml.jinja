@@ -32,6 +32,7 @@ jobs:
         uses: docker/setup-buildx-action@{{ versions.buildx_action_sha }} # {{ versions.buildx_action }}
 {% endif %}
 {% if 'frontend' in components or 'client' in components or ('backend' in components and 'hono' in backend_variants) %}
+{% if cache_downloads | default(true) %}
       - name: Cache Bun downloads
         uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
         with:
@@ -39,7 +40,9 @@ jobs:
           key: bun-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.bun }}-{% raw %}${{ hashFiles('**/package.json') }}{% endraw %}
           restore-keys: bun-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.bun }}-
 {% endif %}
+{% endif %}
 {% if 'client' in components %}
+{% if cache_downloads | default(true) %}
       - name: Cache Cargo downloads
         uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
         with:
@@ -48,13 +51,15 @@ jobs:
             ~/.cargo/git
           key: cargo-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.rust }}-{% raw %}${{ hashFiles('client/src-tauri/Cargo.toml') }}{% endraw %}
           restore-keys: cargo-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.rust }}-
+{% endif %}
       - name: Install Tauri system dependencies
         run: >-
           sudo apt-get update && sudo apt-get install -y
           libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev
-          libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf libfuse2
+          libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf libfuse2t64
 {% endif %}
 {% if 'backend' in components and 'fastapi' in backend_variants %}
+{% if cache_downloads | default(true) %}
       - name: Cache uv downloads
         uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
         with:
@@ -62,10 +67,11 @@ jobs:
           key: uv-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.python_runtime }}-{{ versions.uv }}-{% raw %}${{ hashFiles('backend/fastapi/pyproject.toml') }}{% endraw %}
           restore-keys: uv-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.python_runtime }}-{{ versions.uv }}-
 {% endif %}
+{% endif %}
       - name: Install Devbox
         uses: jetify-com/devbox-install-action@{{ versions.devbox_action_sha }} # {{ versions.devbox_action }}
         with:
-          enable-cache: true
+          enable-cache: {{ "true" if cache_nix | default(true) else "false" }}
           devbox-version: {{ versions.devbox_cli }}
           sha256-checksum: {{ versions.devbox_cli_checksum }}
           disable-nix-access-token: true
@@ -74,7 +80,7 @@ jobs:
       - name: Build project artifacts
 {% if 'backend' in components and 'fastapi' in backend_variants %}
         env:
-          DOCKER_CACHE_ARGS: --cache-from type=gha,scope=fastapi --cache-to type=gha,mode=max,scope=fastapi
+          DOCKER_CACHE_ARGS: {% if cache_docker | default(true) %}--cache-from type=gha,scope=fastapi --cache-to type=gha,mode=max,scope=fastapi{% endif %}
 {% endif %}
         run: devbox run build
 {% if 'frontend' in components %}

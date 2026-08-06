@@ -84,7 +84,7 @@ def test_cloudflare_workflow_is_explicit_and_environment_scoped(render: Render) 
         "workflows": ["Release"],
         "types": ["completed"],
     }
-    assert job["runs-on"] == "ubuntu-22.04"
+    assert job["runs-on"] == "ubuntu-24.04"
     assert job["timeout-minutes"] == 60
     assert job["if"] == (
         "github.event.workflow_run.conclusion == 'success' && "

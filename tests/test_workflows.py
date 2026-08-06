@@ -107,7 +107,7 @@ def test_workflow_yaml_runners_timeouts_and_concurrency(render: Render) -> None:
     for workflow_name, workflow in workflows.items():
         assert isinstance(workflow, dict)
         for job_name, job in workflow["jobs"].items():
-            assert job["runs-on"] == "ubuntu-22.04"
+            assert job["runs-on"] == "ubuntu-24.04"
             assert (
                 job["timeout-minutes"] == expected_timeouts[(workflow_name, job_name)]
             )
