@@ -21,12 +21,13 @@ components:
     Frontend: frontend
     Client: client
     Backend: backend
+    Python Scripts: scripts
   multiselect: true
   default:
     - frontend
   validator: >-
     {% if not components %}
-    Select at least one of Frontend, Client, or Backend.
+    Select at least one of Frontend, Client, Backend, or Python Scripts.
     {% endif %}
 
 frontend_variant:
@@ -141,6 +142,18 @@ fastapi_pydantic_ai:
   default: false
   when: "{{ 'backend' in components and 'fastapi' in backend_variants }}"
 
+python_data_analysis:
+  type: bool
+  help: Add pandas, numpy, matplotlib, and jupyter for local data analysis.
+  default: false
+  when: "{{ 'scripts' in components }}"
+
+python_duckdb:
+  type: bool
+  help: Add DuckDB to the Python scripts workspace.
+  default: false
+  when: "{{ 'scripts' in components }}"
+
 cache_nix:
   type: bool
   help: Cache the Nix store used by Devbox in GitHub Actions.
@@ -178,4 +191,10 @@ fastapi_artifact:
   type: str
   default: >-
     {% if 'backend' in components and 'fastapi' in backend_variants %}OCI-compatible container{% endif %}
+  when: false
+
+scripts_artifact:
+  type: str
+  default: >-
+    {% if 'scripts' in components %}Utility script workspace (no release artifact){% endif %}
   when: false

@@ -42,7 +42,7 @@ def test_default_render_has_only_react_runtime(render: Render) -> None:
         ({"project_name": "   "}, "Project name must not be empty."),
         (
             {"project_name": "Invalid", "components": []},
-            "Select at least one of Frontend, Client, or Backend.",
+            "Select at least one of Frontend, Client, Backend, or Python Scripts.",
         ),
         (
             {
@@ -196,3 +196,37 @@ def test_unselected_client_omits_identifier(render: Render) -> None:
 
     assert "client_identifier" not in answers
     assert not (project / "client").exists()
+
+
+def test_scripts_component_records_answers_and_toggles(render: Render) -> None:
+    project = render(
+        "Scripts",
+        {
+            "components": ["scripts"],
+            "python_data_analysis": True,
+            "python_duckdb": True,
+        },
+    )
+    answers = yaml.safe_load((project / ".copier-answers.yml").read_text())
+
+    assert answers["components"] == ["scripts"]
+    assert answers["python_data_analysis"] is True
+    assert answers["python_duckdb"] is True
+    assert not (project / "frontend").exists()
+    assert not (project / "backend").exists()
+    assert not (project / "client").exists()
+
+
+def test_scripts_toggles_are_gated_on_the_component(render: Render) -> None:
+    default = render("Default")
+    scripts = render("ScriptsMinimal", {"components": ["scripts"]})
+    default_answers = yaml.safe_load((default / ".copier-answers.yml").read_text())
+    scripts_answers = yaml.safe_load((scripts / ".copier-answers.yml").read_text())
+
+    assert "python_data_analysis" not in default_answers
+    assert "python_duckdb" not in default_answers
+    assert "python_data_analysis" in scripts_answers
+    assert "python_duckdb" in scripts_answers
+    assert scripts_answers["python_data_analysis"] is False
+    assert scripts_answers["python_duckdb"] is False
+    assert not (default / "scripts").exists()
