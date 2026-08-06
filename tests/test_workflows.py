@@ -407,3 +407,48 @@ def test_fastapi_workflows_omit_unselected_runtime_setup(render: Render) -> None
     assert "frontend.tar.gz" not in all_text
     assert "hono-worker.tar.gz" not in all_text
     assert "fastapi-backend.tar" in all_text
+
+
+def test_rendered_cache_steps_have_prefix_restore_keys(render: Render) -> None:
+    project = render(
+        "RestoreKeys",
+        {
+            "components": ["frontend", "client", "backend"],
+            "backend_variants": ["hono", "fastapi"],
+            "frontend_playwright": True,
+            "client_playwright": True,
+        },
+    )
+
+    for workflow in load_workflows(project).values():
+        for job in workflow["jobs"].values():
+            for step in job["steps"]:
+                if not step.get("name", "").startswith("Cache "):
+                    continue
+                with_ = step["with"]
+                assert "restore-keys" in with_
+                assert with_["restore-keys"].endswith("-")
+                assert with_["key"].startswith(with_["restore-keys"])
+
+
+def test_repository_validate_workflow_caches_uv_and_scopes_concurrency() -> None:
+    validate = yaml.safe_load(
+        (ROOT / ".github" / "workflows" / "validate.yml").read_text()
+    )
+    steps = {step["name"]: step for step in validate["jobs"]["check"]["steps"]}
+    cache = steps["Cache uv downloads"]
+
+    assert cache["with"]["path"] == "~/.cache/uv"
+    assert cache["with"]["restore-keys"].endswith("-")
+    assert cache["with"]["key"].startswith(cache["with"]["restore-keys"])
+    assert validate["concurrency"] == {
+        "group": "${{ github.workflow }}-${{ github.ref }}",
+        "cancel-in-progress": True,
+    }
+
+
+def test_repository_workflows_scope_concurrency() -> None:
+    for path in (ROOT / ".github" / "workflows").iterdir():
+        workflow = yaml.safe_load(path.read_text())
+        assert "concurrency" in workflow
+        assert workflow["concurrency"]["group"]
