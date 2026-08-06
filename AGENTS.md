@@ -77,7 +77,9 @@
   validation, but do not cancel an active publication or deployment.
 - Cache download stores and Docker layers only. Never cache credentials,
   `node_modules`, virtual environments, Cargo targets, OpenTofu state, or resolved
-  backend configuration.
+  backend configuration. Give every cache step a `restore-keys` prefix fallback so
+  a superseded lockfile or version hash still restores the previous download
+  store and only the changed parts are re-downloaded.
 - Validate generated workflows with actionlint and validate built artifacts by
   structure or executable behavior rather than filename existence alone.
 - Chained release and deploy workflows run on the default branch, check out the

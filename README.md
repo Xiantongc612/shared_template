@@ -46,10 +46,10 @@ design decisions documented in `PLAN.md`.
 - Generated root commands for formatting, static checks, unit tests, optional
   end-to-end tests, and local artifact builds
 - Generated GitHub Actions with immutable action pins, bounded jobs, safe
-  dependency caches, and a read-only validate stage that never builds or deploys
-  for pull requests. The release stage builds artifacts and requires manual
-  approval to publish, and the deploy stage consumes the released artifacts
-  under a separate production approval boundary.
+  dependency caches with prefix-restore fallbacks, and a read-only validate
+  stage that never builds or deploys for pull requests. The release stage builds
+  artifacts and requires manual approval to publish, and the deploy stage
+  consumes the released artifacts under a separate production approval boundary.
 - Component-owned OpenTofu and Cloudflare release automation for Hono and Astro
 
 ## Frontend

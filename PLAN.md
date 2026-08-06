@@ -213,6 +213,36 @@ None.
   guards, the production-only publish gate, artifact consumption by the deploy
   stage, cache safety, and rendered actionlint validity.
 
+## Workflow Cache and Concurrency Milestone
+
+### Approved contracts
+
+- Every repository and generated workflow scopes concurrency to a named group.
+  Validation and auto-merge groups cancel superseded runs, while release and
+  deploy groups never cancel an active publication or deployment.
+- Cache steps cover download stores (Bun, Cargo, uv, Playwright) and Docker
+  layers only. They never cache credentials, `node_modules`, virtual
+  environments, Cargo targets, OpenTofu state, or resolved backend configuration.
+- Every cache step provides a `restore-keys` prefix fallback so a superseded
+  lockfile or version hash still restores the previous download store and only
+  the changed parts are re-downloaded.
+
+### Remaining work
+
+None.
+
+### Implemented scope
+
+- The repository `integration` workflow and the generated `validate`, `release`,
+  and `deploy` workflows cache Bun, Cargo, uv, and Playwright download stores
+  with `restore-keys` prefix fallbacks.
+- The repository `validate` workflow caches the uv download store used by the
+  `check` and `test` commands.
+- Repository and generated workflows keep concurrency groups and
+  `cancel-in-progress` policies consistent with their publication sensitivity.
+- Tests cover cache path safety, `restore-keys` prefix fallbacks, and repository
+  workflow concurrency.
+
 ## Deferred Design Decisions
 
 The following work is intentionally unplanned until its contracts and compatibility
