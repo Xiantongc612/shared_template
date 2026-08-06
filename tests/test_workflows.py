@@ -431,6 +431,64 @@ def test_rendered_cache_steps_have_prefix_restore_keys(render: Render) -> None:
                 assert with_["key"].startswith(with_["restore-keys"])
 
 
+def test_cache_downloads_toggle_removes_download_store_caches(render: Render) -> None:
+    project = render(
+        "CacheDownloadsOff",
+        {
+            "components": ["frontend", "client", "backend"],
+            "backend_variants": ["hono", "fastapi"],
+            "frontend_playwright": True,
+            "client_playwright": True,
+            "cache_downloads": False,
+        },
+    )
+    workflow_text = "\n".join(path.read_text() for path in workflow_paths(project))
+
+    assert "actions/cache@" not in workflow_text
+    assert "restore-keys" not in workflow_text
+    assert "enable-cache: true" in workflow_text
+
+
+def test_cache_nix_toggle_disables_devbox_nix_store_cache(render: Render) -> None:
+    off = render("NixCacheOff", {"components": ["frontend"], "cache_nix": False})
+    off_text = "\n".join(path.read_text() for path in workflow_paths(off))
+
+    assert "enable-cache: false" in off_text
+    assert "enable-cache: true" not in off_text
+
+    on = render("NixCacheOn", {"components": ["frontend"]})
+    on_text = "\n".join(path.read_text() for path in workflow_paths(on))
+
+    assert "enable-cache: true" in on_text
+    assert "enable-cache: false" not in on_text
+
+
+def test_cache_docker_toggle_gates_fastapi_build_cache(render: Render) -> None:
+    off = render(
+        "DockerCacheOff",
+        {
+            "components": ["backend"],
+            "backend_variants": ["fastapi"],
+            "cache_docker": False,
+        },
+    )
+    off_release = (off / ".github" / "workflows" / "release.yml").read_text()
+
+    assert "DOCKER_CACHE_ARGS" in off_release
+    assert "DOCKER_CACHE_ARGS: --cache-from" not in off_release
+    assert "--cache-to type=gha" not in off_release
+    assert "Set up Docker Buildx" in off_release
+
+    on = render(
+        "DockerCacheOn",
+        {"components": ["backend"], "backend_variants": ["fastapi"]},
+    )
+    on_release = (on / ".github" / "workflows" / "release.yml").read_text()
+
+    assert "--cache-from type=gha,scope=fastapi" in on_release
+    assert "--cache-to type=gha,mode=max,scope=fastapi" in on_release
+
+
 def test_repository_validate_workflow_caches_uv_and_scopes_concurrency() -> None:
     validate = yaml.safe_load(
         (ROOT / ".github" / "workflows" / "validate.yml").read_text()
