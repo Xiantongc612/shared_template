@@ -31,6 +31,12 @@ jobs:
           devbox-version: 0.17.5
           sha256-checksum: eb2d8fb34266ba3befc294d7d6f56e2cd4da2cacb7a0cf52db5b8092575544f8
           disable-nix-access-token: true
+      - name: Cache uv downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/uv
+          key: check-${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
+          restore-keys: check-${{ runner.os }}-uv-
       - name: Run repository checks
         run: devbox run check
       - name: Run repository tests
