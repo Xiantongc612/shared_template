@@ -54,13 +54,13 @@ jobs:
           libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev
           libssl-dev libayatana-appindicator3-dev librsvg2-dev
 {% endif %}
-{% if 'backend' in components and 'fastapi' in backend_variants %}
+{% if ('backend' in components and 'fastapi' in backend_variants) or 'scripts' in components %}
 {% if cache_downloads | default(true) %}
       - name: Cache uv downloads
         uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
         with:
           path: ~/.cache/uv
-          key: uv-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.python_runtime }}-{{ versions.uv }}-{% raw %}${{ hashFiles('backend/fastapi/pyproject.toml') }}{% endraw %}
+          key: uv-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.python_runtime }}-{{ versions.uv }}-{% raw %}${{ hashFiles('**/pyproject.toml') }}{% endraw %}
           restore-keys: uv-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.python_runtime }}-{{ versions.uv }}-
 {% endif %}
 {% endif %}
@@ -111,13 +111,13 @@ jobs:
           libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev
           libssl-dev libayatana-appindicator3-dev librsvg2-dev
 {% endif %}
-{% if 'backend' in components and 'fastapi' in backend_variants %}
+{% if ('backend' in components and 'fastapi' in backend_variants) or 'scripts' in components %}
 {% if cache_downloads | default(true) %}
       - name: Cache uv downloads
         uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
         with:
           path: ~/.cache/uv
-          key: uv-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.python_runtime }}-{{ versions.uv }}-{% raw %}${{ hashFiles('backend/fastapi/pyproject.toml') }}{% endraw %}
+          key: uv-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.python_runtime }}-{{ versions.uv }}-{% raw %}${{ hashFiles('**/pyproject.toml') }}{% endraw %}
           restore-keys: uv-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.python_runtime }}-{{ versions.uv }}-
 {% endif %}
 {% endif %}

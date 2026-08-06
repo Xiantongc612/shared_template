@@ -1,4 +1,5 @@
 {% from "template/_versions.jinja" import versions -%}
+{% set produces_artifacts = 'frontend' in components or 'client' in components or ('backend' in components and ('hono' in backend_variants or 'fastapi' in backend_variants)) %}
 ---
 name: Release
 
@@ -58,13 +59,13 @@ jobs:
           libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev
           libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf libfuse2t64
 {% endif %}
-{% if 'backend' in components and 'fastapi' in backend_variants %}
+{% if ('backend' in components and 'fastapi' in backend_variants) or 'scripts' in components %}
 {% if cache_downloads | default(true) %}
       - name: Cache uv downloads
         uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
         with:
           path: ~/.cache/uv
-          key: uv-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.python_runtime }}-{{ versions.uv }}-{% raw %}${{ hashFiles('backend/fastapi/pyproject.toml') }}{% endraw %}
+          key: uv-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.python_runtime }}-{{ versions.uv }}-{% raw %}${{ hashFiles('**/pyproject.toml') }}{% endraw %}
           restore-keys: uv-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.python_runtime }}-{{ versions.uv }}-
 {% endif %}
 {% endif %}
@@ -107,6 +108,7 @@ jobs:
         if: startsWith(github.event.workflow_run.head_branch, 'v')
         run: mkdir -p release-artifacts && cp backend/fastapi/dist/fastapi-backend.tar release-artifacts/
 {% endif %}
+{% if produces_artifacts %}
       - name: Upload release artifacts
         if: startsWith(github.event.workflow_run.head_branch, 'v')
         uses: actions/upload-artifact@{{ versions.upload_artifact_action_sha }} # {{ versions.upload_artifact_action }}
@@ -114,6 +116,7 @@ jobs:
           name: release-artifacts
           path: release-artifacts/
           if-no-files-found: error
+{% endif %}
 {% if 'frontend' in components and frontend_variant == 'astro' %}
       - name: Upload Astro deploy artifact
         uses: actions/upload-artifact@{{ versions.upload_artifact_action_sha }} # {{ versions.upload_artifact_action }}
@@ -131,6 +134,7 @@ jobs:
           if-no-files-found: error
 {% endif %}
 
+{% if produces_artifacts %}
   publish:
     needs: build
     if: startsWith(github.event.workflow_run.head_branch, 'v')
@@ -151,3 +155,4 @@ jobs:
         run: >-
           gh release create "{% raw %}${{ github.event.workflow_run.head_branch }}{% endraw %}" --generate-notes
           release-artifacts/*
+{% endif %}

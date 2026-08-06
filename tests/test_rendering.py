@@ -35,6 +35,26 @@ from support import SHARED_FILES, WORKFLOW_FILES, Render
             {"Frontend:", "Tauri", "Hono", "Cloudflare"},
         ),
         (
+            "Scripts",
+            {"components": ["scripts"]},
+            {"Python Scripts", "Utility script workspace (no release artifact)"},
+            {"Frontend:", "Tauri", "Hono", "FastAPI", "OCI-compatible", "Cloudflare"},
+        ),
+        (
+            "ScriptsIntegrations",
+            {
+                "components": ["scripts"],
+                "python_data_analysis": True,
+                "python_duckdb": True,
+            },
+            {
+                "Python Scripts",
+                "local data analysis (pandas, numpy, matplotlib, jupyter)",
+                "Python Scripts: DuckDB",
+            },
+            {"Frontend:", "Tauri", "Hono", "FastAPI"},
+        ),
+        (
             "Backends",
             {
                 "components": ["backend"],

@@ -51,3 +51,10 @@ updates:
       interval: weekly
     open-pull-requests-limit: 3
 {% endif %}
+{% if 'scripts' in components %}
+  - package-ecosystem: uv
+    directory: /scripts
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+{% endif %}

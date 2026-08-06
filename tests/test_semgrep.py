@@ -47,6 +47,7 @@ def test_generated_semgrep_is_component_aware(render) -> None:
         "Tauri": {"components": ["client"]},
         "Hono": {"components": ["backend"], "backend_variants": ["hono"]},
         "FastAPI": {"components": ["backend"], "backend_variants": ["fastapi"]},
+        "Scripts": {"components": ["scripts"]},
         "Everything": {
             "components": ["frontend", "client", "backend"],
             "backend_variants": ["hono", "fastapi"],
@@ -61,6 +62,8 @@ def test_generated_semgrep_is_component_aware(render) -> None:
     assert "rust-shell-injection" in rules["Tauri"]
     assert "hcl-hardcoded-credentials" in rules["Hono"]
     assert "python-shell-injection" in rules["FastAPI"]
+    assert "python-shell-injection" in rules["Scripts"]
+    assert "python-eval-exec" in rules["Scripts"]
     assert "rust-shell-injection" in rules["Everything"]
     assert "python-shell-injection" in rules["Everything"]
 
@@ -68,6 +71,8 @@ def test_generated_semgrep_is_component_aware(render) -> None:
     assert "python-shell-injection" not in rules["React"]
     assert "rust-shell-injection" not in rules["FastAPI"]
     assert "typescript-shell-injection" not in rules["FastAPI"]
+    assert "typescript-shell-injection" not in rules["Scripts"]
+    assert "rust-shell-injection" not in rules["Scripts"]
 
 
 def test_generated_semgrep_rules_are_parseable(render) -> None:

@@ -409,6 +409,67 @@ def test_fastapi_workflows_omit_unselected_runtime_setup(render: Render) -> None
     assert "fastapi-backend.tar" in all_text
 
 
+def test_scripts_only_release_skips_artifact_publication(render: Render) -> None:
+    project = render("ScriptsRelease", {"components": ["scripts"]})
+    release = load_workflows(project)["release.yml"]
+
+    assert set(release["jobs"]) == {"build"}
+    assert release["jobs"]["build"]["if"] == (
+        "github.event.workflow_run.conclusion == 'success' && "
+        "github.event.workflow_run.event != 'pull_request'"
+    )
+    release_text = (project / ".github" / "workflows" / "release.yml").read_text()
+    assert "Upload release artifacts" not in release_text
+    assert "gh release create" not in release_text
+    assert "actions/upload-artifact@" not in release_text
+    assert "actions/download-artifact@" not in release_text
+
+    fastapi = render(
+        "ScriptsFastapi",
+        {"components": ["scripts", "backend"], "backend_variants": ["fastapi"]},
+    )
+    combined_release = load_workflows(fastapi)["release.yml"]
+    assert "publish" in combined_release["jobs"]
+    assert combined_release["jobs"]["publish"]["if"] == (
+        "startsWith(github.event.workflow_run.head_branch, 'v')"
+    )
+
+
+def test_scripts_share_single_uv_cache_step(render: Render) -> None:
+    scripts = render("ScriptsCache", {"components": ["scripts"]})
+    combined = render(
+        "ScriptsFastapiCache",
+        {"components": ["scripts", "backend"], "backend_variants": ["fastapi"]},
+    )
+
+    for project in (scripts, combined):
+        workflows = load_workflows(project)
+        for workflow_name, workflow in workflows.items():
+            for job_name, job in workflow["jobs"].items():
+                names = [step["name"] for step in job["steps"]]
+                assert names.count("Cache uv downloads") <= 1, (
+                    workflow_name,
+                    job_name,
+                )
+        assert "~/.bun/install/cache" not in "\n".join(
+            path.read_text() for path in workflow_paths(project)
+        )
+
+    validate = load_workflows(combined)["validate.yml"]
+    assert (
+        sum(
+            1
+            for job in validate["jobs"].values()
+            for step in job["steps"]
+            if step.get("name") == "Cache uv downloads"
+        )
+        == 2
+    )
+    combined_text = "\n".join(path.read_text() for path in workflow_paths(combined))
+    assert "hashFiles('**/pyproject.toml')" in combined_text
+    assert "backend/fastapi/pyproject.toml" not in combined_text
+
+
 def test_rendered_cache_steps_have_prefix_restore_keys(render: Render) -> None:
     project = render(
         "RestoreKeys",

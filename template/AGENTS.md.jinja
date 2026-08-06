@@ -76,6 +76,15 @@
 - The production artifact is an OCI archive produced from the component
   Dockerfile; do not publish it during validation.
 {% endif -%}
+{% if 'scripts' in components -%}
+### Python Scripts
+
+- The utility script workspace is under `scripts/`.
+- Use the component's uv environment for Ruff, ty, pytest, and local development.
+- The workspace produces no deployable or release artifact; `devbox run build`
+  only validates that the package sources compile.
+
+{% endif -%}
 
 ## GitHub Automation
 

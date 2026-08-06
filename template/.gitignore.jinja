@@ -40,7 +40,7 @@ client/playwright-report/
 client/test-results/
 {% endif %}
 {% endif %}
-{% if 'backend' in components and 'fastapi' in backend_variants %}
+{% if ('backend' in components and 'fastapi' in backend_variants) or 'scripts' in components %}
 # Python
 .venv/
 uv.lock
@@ -49,6 +49,11 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .ty_cache/
+{% if 'backend' in components and 'fastapi' in backend_variants %}
 backend/fastapi/.venv/
 backend/fastapi/dist/
+{% endif %}
+{% if 'scripts' in components %}
+scripts/.venv/
+{% endif %}
 {% endif %}

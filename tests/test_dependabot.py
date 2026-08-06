@@ -33,6 +33,7 @@ def test_rendered_dependabot_tracks_selected_components(render: Render) -> None:
     default = render("Default")
     client = render("Client", {"components": ["client"]})
     hono = render("Hono", {"components": ["backend"], "backend_variants": ["hono"]})
+    scripts = render("Scripts", {"components": ["scripts"]})
     everything = render(
         "Everything",
         {
@@ -55,6 +56,10 @@ def test_rendered_dependabot_tracks_selected_components(render: Render) -> None:
         ("github-actions", "/"),
         ("bun", "/backend/hono"),
         ("opentofu", "/backend/hono/infrastructure"),
+    }
+    assert dependabot_entries(scripts) == {
+        ("github-actions", "/"),
+        ("uv", "/scripts"),
     }
     assert dependabot_entries(everything) == {
         ("github-actions", "/"),

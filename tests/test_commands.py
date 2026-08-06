@@ -49,6 +49,42 @@ def test_astro_only_test_is_a_successful_noop(render: Render) -> None:
     assert "test:e2e" not in scripts
 
 
+def test_scripts_commands_compile_sources_as_build(render: Render) -> None:
+    project = render(
+        "ScriptsCommands",
+        {"components": ["scripts"], "python_data_analysis": True},
+    )
+    devbox_scripts = json.loads((project / "devbox.json").read_text())["shell"][
+        "scripts"
+    ]
+
+    assert "uv sync --project scripts" in devbox_scripts["init"]
+    assert "uv run --project scripts ruff format scripts" in devbox_scripts["fmt"]
+    assert "uv run --project scripts ruff check scripts" in devbox_scripts["check"]
+    assert (
+        "uv run --project scripts ruff format --check scripts"
+        in devbox_scripts["check"]
+    )
+    assert "uv run --project scripts ty check scripts/src" in devbox_scripts["check"]
+    assert "uv run --project scripts pytest scripts" in devbox_scripts["test"]
+    assert devbox_scripts["build"] == [
+        "uv run --project scripts python -m compileall -q scripts/src"
+    ]
+    assert not any("build" in command for command in devbox_scripts["test"])
+    assert not any("pytest" in command for command in devbox_scripts["check"])
+
+
+def test_scripts_suppresses_astro_test_fallback(render: Render) -> None:
+    project = render(
+        "AstroScripts",
+        {"frontend_variant": "astro", "components": ["scripts"]},
+    )
+    scripts = json.loads((project / "devbox.json").read_text())["shell"]["scripts"]
+
+    assert scripts["test"] == ["uv run --project scripts pytest scripts"]
+    assert "No unit tests configured" not in str(scripts)
+
+
 def test_repository_commands_enforce_uv_lock() -> None:
     scripts = json.loads((ROOT / "devbox.json").read_text())["shell"]["scripts"]
 

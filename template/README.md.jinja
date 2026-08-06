@@ -19,6 +19,10 @@ Generated from the `shared_template` Copier template.
 {% if 'backend' in components and 'fastapi' in backend_variants -%}
 - Backend: FastAPI
   - Artifact: {{ fastapi_artifact }}
+{% endif -%}
+{% if 'scripts' in components -%}
+- Python Scripts: utility script workspace
+  - Artifact: {{ scripts_artifact }}
 {% endif %}
 
 ## Project commands
@@ -111,6 +115,27 @@ docker buildx build --output type=oci,dest=backend/fastapi/dist/fastapi-backend.
 ```
 
 The Docker build creates a local OCI-compatible image and does not publish it.
+{% endif %}
+{% if 'scripts' in components %}
+## Python Scripts
+
+The independent utility script workspace is in `scripts/`. The `utility-scripts`
+console script exposes the example CLI entry point.
+
+```sh
+uv sync --project scripts
+uv run --project scripts ruff check scripts
+uv run --project scripts ruff format --check scripts
+uv run --project scripts ty check scripts/src
+uv run --project scripts pytest scripts
+```
+
+`devbox run build` compiles the package sources; the workspace produces no
+deployable or release artifact.
+{% if python_data_analysis or python_duckdb %}
+The optional integrations add local-analysis dependencies only when their toggle
+is enabled.
+{% endif %}
 {% endif %}
 {% if 'backend' in components and 'hono' in backend_variants %}
 ## Hono backend
@@ -223,6 +248,14 @@ then run the end-to-end suite with `bun run --cwd frontend test:e2e`.
 {% if 'backend' in components and 'fastapi' in backend_variants and fastapi_pydantic_ai -%}
 {% set ns.any = true -%}
 - FastAPI: PydanticAI
+{% endif -%}
+{% if 'scripts' in components and python_data_analysis -%}
+{% set ns.any = true -%}
+- Python Scripts: local data analysis (pandas, numpy, matplotlib, jupyter)
+{% endif -%}
+{% if 'scripts' in components and python_duckdb -%}
+{% set ns.any = true -%}
+- Python Scripts: DuckDB
 {% endif -%}
 {% if not ns.any -%}
 None.

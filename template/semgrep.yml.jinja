@@ -99,7 +99,7 @@ rules:
       cwe:
         - "CWE-502: Deserialization of Untrusted Data"
 {% endif %}
-{% if 'backend' in components and 'fastapi' in backend_variants %}
+{% if ('backend' in components and 'fastapi' in backend_variants) or 'scripts' in components %}
   - id: python-shell-injection
     pattern-either:
       - pattern: subprocess.run($ARGS, ..., shell=True, ...)
