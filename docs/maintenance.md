@@ -83,8 +83,8 @@ minimum version.
 
 `devbox run check` validates repository source and deterministic template
 rendering, and `devbox run test` runs the repository test suite. `devbox run
-integration` additionally renders React, Astro, Tauri, Hono, and FastAPI
-projects independently, then runs each generated project's
+integration` additionally renders React, Astro, Tauri, Hono, FastAPI, and
+Python scripts projects independently, then runs each generated project's
 `init`, `check`, `test`, and `build` commands. Focused `integration:<component>`
 commands support local maintenance.
 
@@ -123,4 +123,7 @@ OpenTofu, and runs Wrangler release commands; staging deploys automatically and
 production requires a separate GitHub environment approval. Tauri automation
 produces Linux AppImage and Debian bundles only because macOS and Windows
 artifacts require native runners. OCI and Cloudflare artifacts are built locally
-without deployment by the validate and release stages.
+without deployment by the validate and release stages. A project that selects
+only artifact-free components (the Python scripts workspace) keeps the release
+build validation stage but omits the artifact upload and GitHub Release
+publication jobs.

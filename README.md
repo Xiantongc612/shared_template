@@ -1,6 +1,6 @@
 # shared_template
 
-An opinionated [Copier](https://copier.readthedocs.io/) template for composing applications from independently selectable frontend, client, and backend components.
+An opinionated [Copier](https://copier.readthedocs.io/) template for composing applications from independently selectable frontend, client, backend, and Python utility-script components.
 
 ## Local development
 
@@ -24,10 +24,11 @@ case.
 
 ## Component selection rules
 
-- A generated project must include at least one frontend, client, or backend component.
+- A generated project must include at least one frontend, client, backend, or Python scripts component.
 - Components are independently selectable and may be combined in one generated project.
 - The frontend has two mutually exclusive variants: React for application-style static sites and Astro for content-oriented static sites.
 - The backend may include Hono, FastAPI, or both.
+- The Python scripts component produces a local utility workspace with no deployable or release artifact; its build stage compiles sources only.
 - When multiple components are selected, each produces an independent output. Selecting both a frontend and a client does not imply shared source code or a shared UI package.
 - Optional integrations are opt-in unless a component lists them as part of its core stack.
 - Each component has a fixed artifact type; artifact targets are not questionnaire options.
@@ -116,3 +117,22 @@ The FastAPI backend produces an OCI-compatible container artifact.
 - ty as the type checker
 - PydanticAI as an optional AI integration
 - Digest-pinned multi-platform uv and Python base images
+
+## Python Scripts
+
+The Python scripts component produces a local utility script workspace in
+`scripts/` with no deployable or release artifact.
+
+- uv as package manager
+- Python as runtime
+- pytest as the test framework
+- Ruff as the linter and formatter
+- ty as the type checker
+- Hatchling as the build backend with a `utility-scripts` console script
+- Optional local data analysis (pandas, numpy, matplotlib, jupyter)
+- Optional DuckDB integration
+
+The component's `build` stage validates that the package sources compile.
+Generated release automation skips artifact collection and GitHub Release
+publication when a generated project selects only components that produce no
+artifact.
