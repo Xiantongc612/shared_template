@@ -47,7 +47,9 @@ design decisions documented in `PLAN.md`.
   end-to-end tests, and local artifact builds
 - Generated GitHub Actions with immutable action pins, bounded jobs, safe
   dependency caches with prefix-restore fallbacks, and a read-only validate
-  stage that never builds or deploys for pull requests. The release stage builds
+  stage that never builds or deploys for pull requests. Download-store, Nix
+  store, and Docker layer caches are opt-out toggles enabled by default
+  (`cache_downloads`, `cache_nix`, `cache_docker`). The release stage builds
   artifacts and requires manual approval to publish, and the deploy stage
   consumes the released artifacts under a separate production approval boundary.
 - Component-owned OpenTofu and Cloudflare release automation for Hono and Astro

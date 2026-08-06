@@ -8,9 +8,12 @@ testing is implemented as shared tooling for the repository and generated
 projects. The repository hygiene milestone brought the repository to the same
 validation and pinning discipline it generates. The dependency automation
 milestone automates updates with Dependabot for the repository and generated
-projects. The active milestone restructures generated automation into staged
-validate, release, and deploy pipelines and aligns repository Devbox commands
-with the generated project surface.
+projects. The release pipeline milestone restructured generated automation
+into staged validate, release, and deploy workflows and aligned repository
+Devbox commands with the generated project surface. The workflow cache and
+concurrency milestone scopes workflow concurrency, adds prefix-restore
+download caches with opt-out toggles, and migrates Linux CI and native
+artifact builds to Ubuntu 24.04.
 
 ## Constraints
 
@@ -226,6 +229,15 @@ None.
 - Every cache step provides a `restore-keys` prefix fallback so a superseded
   lockfile or version hash still restores the previous download store and only
   the changed parts are re-downloaded.
+- Caching is opt-out and defaults to enabled. The questionnaire always asks
+  `cache_nix`, `cache_docker`, and `cache_downloads`; each toggle removes only
+  its own cache surface and never the build behavior itself.
+- `cache_downloads` gates the Bun, Cargo, uv, and Playwright download-store
+  steps, `cache_nix` gates the Devbox Nix store cache, and `cache_docker` gates
+  the FastAPI build cache arguments passed to `docker buildx build`.
+- Linux CI and native artifact builds run on Ubuntu 24.04, where the Devbox Nix
+  toolchain links against glibc 2.39. Tauri AppImage bundling installs
+  `libfuse2t64`.
 
 ### Remaining work
 
@@ -238,10 +250,16 @@ None.
   with `restore-keys` prefix fallbacks.
 - The repository `validate` workflow caches the uv download store used by the
   `check` and `test` commands.
+- Generated workflows render the opt-out cache toggles: `cache_downloads`
+  removes download-store steps, `cache_nix` sets `enable-cache: false` on the
+  Devbox installer, and `cache_docker` clears `DOCKER_CACHE_ARGS` for FastAPI
+  builds.
+- Repository and generated workflows run on `ubuntu-24.04`; generated and
+  repository Tauri builds install `libfuse2t64`.
 - Repository and generated workflows keep concurrency groups and
   `cancel-in-progress` policies consistent with their publication sensitivity.
-- Tests cover cache path safety, `restore-keys` prefix fallbacks, and repository
-  workflow concurrency.
+- Tests cover the runner pin, the opt-out cache toggles, cache path safety,
+  `restore-keys` prefix fallbacks, and repository workflow concurrency.
 
 ## Deferred Design Decisions
 
@@ -255,7 +273,6 @@ requirements are approved:
 - Docker Compose or other cross-service orchestration.
 - Container registry publication, package publication, or application-store
   release automation.
-- Migration of Linux CI and native artifact builds from Ubuntu 22.04.
 - A universal generated-project directory layout.
 - Resolution of 1Password references into generated files or logs.
 - SonarQube or SonarCloud server-based static analysis.

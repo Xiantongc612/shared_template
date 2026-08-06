@@ -45,6 +45,9 @@
   lockfiles as template output.
 - Keep generated dependency and automation pins in `template/_versions.jinja`;
   do not expose them as Copier answers or emit the registry into generated output.
+- Ask the `cache_nix`, `cache_docker`, and `cache_downloads` toggles for every
+  generated project with caching enabled by default, so caching stays opt-out
+  rather than opt-in.
 - Keep Astro static for Cloudflare Pages. Do not add the Cloudflare adapter, Pages
   Functions, or server-side rendering as part of the deployment milestone.
 
@@ -70,7 +73,8 @@
 ## Generated automation design
 
 - Pin external GitHub Actions by full commit SHA with a reviewed version comment,
-  and pin the Devbox installer CLI and checksum.
+  and pin the Devbox installer CLI and checksum. Run Linux CI and native artifact
+  builds on Ubuntu 24.04 with `libfuse2t64` for Tauri AppImage bundling.
 - Give validation jobs read-only permissions. Keep write credentials confined to
   publication or deployment steps and jobs that require them.
 - Give every job an explicit timeout and concurrency policy. Cancel superseded
@@ -80,6 +84,11 @@
   backend configuration. Give every cache step a `restore-keys` prefix fallback so
   a superseded lockfile or version hash still restores the previous download
   store and only the changed parts are re-downloaded.
+- Cache toggles are opt-out and default to enabled. The questionnaire always
+  asks `cache_downloads` (Bun, Cargo, uv, and Playwright download-store steps),
+  `cache_nix` (Devbox Nix store cache), and `cache_docker` (FastAPI
+  `DOCKER_CACHE_ARGS`); each toggle removes only its own cache surface and never
+  the build behavior itself. Never cache Cargo `target/` directories.
 - Validate generated workflows with actionlint and validate built artifacts by
   structure or executable behavior rather than filename existence alone.
 - Chained release and deploy workflows run on the default branch, check out the
