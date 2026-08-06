@@ -16,6 +16,7 @@
     "uv@{{ versions.uv }}"{% endif %}
   ],
   "shell": {
+    "init_hook": [{% if 'client' in components %}"if [ -x /usr/bin/ldd ]; then mkdir -p .devbox-host-bin && printf '#!/bin/sh\nexec /usr/bin/ldd \"$@\"\n' > .devbox-host-bin/ldd && chmod +x .devbox-host-bin/ldd && export PATH=\"$PWD/.devbox-host-bin:$PATH\"; fi"{% endif %}],
     "scripts": {
       "init": [
         "pre-commit install"{% if 'frontend' in components %},

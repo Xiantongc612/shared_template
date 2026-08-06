@@ -143,6 +143,22 @@ def test_client_generator_is_independent(render: Render) -> None:
     assert not (project / "frontend").exists()
 
 
+def test_client_devbox_exposes_host_ldd_for_appimage_bundling(
+    render: Render,
+) -> None:
+    project = render("ClientLdd", {"components": ["client"]})
+    devbox = json.loads((project / "devbox.json").read_text())
+    init_hook = devbox["shell"]["init_hook"]
+
+    assert len(init_hook) == 1
+    assert "/usr/bin/ldd" in init_hook[0]
+    assert 'export PATH="$PWD/.devbox-host-bin:$PATH"' in init_hook[0]
+
+    frontend = render("FrontendNoLdd", {"components": ["frontend"]})
+    frontend_devbox = json.loads((frontend / "devbox.json").read_text())
+    assert frontend_devbox["shell"]["init_hook"] == []
+
+
 def test_hono_generator_and_optional_ai(render: Render) -> None:
     project = render(
         "HonoAI",
