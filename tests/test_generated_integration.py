@@ -51,6 +51,10 @@ def test_cases_cover_minimal_and_all_compatible_integrations() -> None:
         "frontend_i18next": True,
     }
     assert integration.CASES["tauri-integrations"].e2e_component == "client"
+    assert integration.CASE_GROUPS["tauri-all"] == (
+        integration.CASES["tauri"],
+        integration.CASES["tauri-integrations"],
+    )
     assert integration.CASES["hono-integrations"].answers["hono_ai_sdk"] is True
     assert (
         integration.CASES["fastapi-integrations"].answers["fastapi_pydantic_ai"] is True
@@ -78,14 +82,57 @@ def test_integration_workflow_matrix_matches_case_definitions() -> None:
         (root / ".github" / "workflows" / "integration.yml").read_text()
     )
     matrix = workflow["jobs"]["generated-project"]["strategy"]["matrix"]["include"]
-
-    assert {entry["case"] for entry in matrix} == set(integration.CASES)
     matrix_by_name = {entry["case"]: entry for entry in matrix}
+
+    tauri_all = matrix_by_name.pop("tauri-all")
+    assert tauri_all["family"] == "tauri"
+    assert tauri_all["e2e"] is True
+    assert tauri_all["timeout"] > 0
+
+    assert set(matrix_by_name) == set(integration.CASES) - {
+        "tauri",
+        "tauri-integrations",
+    }
     for case in integration.CASE_LIST:
+        if case.name in {"tauri", "tauri-integrations"}:
+            continue
         entry = matrix_by_name[case.name]
         assert entry["family"] == case.family
         assert entry["e2e"] == (case.e2e_component is not None)
         assert entry["timeout"] > 0
+
+
+def test_integration_workflow_shares_cargo_target_between_tauri_cases() -> None:
+    import yaml
+
+    root = Path(__file__).parents[1]
+    workflow = yaml.safe_load(
+        (root / ".github" / "workflows" / "integration.yml").read_text()
+    )
+    job = workflow["jobs"]["generated-project"]
+    validate_steps = [
+        step
+        for step in job["steps"]
+        if step.get("name") == "Validate generated project"
+    ]
+    assert len(validate_steps) == 1
+    assert validate_steps[0]["env"]["CARGO_TARGET_DIR"].startswith("${{ runner.temp }}")
+
+
+def test_integration_workflow_is_gated_on_template_paths() -> None:
+    import yaml
+
+    root = Path(__file__).parents[1]
+    workflow = yaml.safe_load(
+        (root / ".github" / "workflows" / "integration.yml").read_text()
+    )
+    trigger = workflow[True]
+    pull_request_paths = trigger["pull_request"]["paths"]
+    assert "copier.yml" in pull_request_paths
+    assert "template/**" in pull_request_paths
+    assert "scripts/**" in pull_request_paths
+    assert ".github/workflows/integration.yml" in pull_request_paths
+    assert trigger["push"]["paths"] == pull_request_paths
 
 
 def write_static_dist(project: Path, script_reference: str = "assets/app.js") -> None:
@@ -160,7 +207,8 @@ def test_hono_validator_rejects_empty_bundle(tmp_path: Path) -> None:
 def test_tauri_validator_checks_packages_without_launching_gui(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    bundle = tmp_path / "client" / "src-tauri" / "target" / "release" / "bundle"
+    shared_target = tmp_path / "shared-target"
+    bundle = shared_target / "release" / "bundle"
     deb = bundle / "deb" / "app.deb"
     appimage = bundle / "appimage" / "app.AppImage"
     deb.parent.mkdir(parents=True)
@@ -191,7 +239,9 @@ def test_tauri_validator_checks_packages_without_launching_gui(
     monkeypatch.setattr(integration.subprocess, "run", fake_subprocess_run)
     monkeypatch.setattr(integration, "run", fake_extract)
 
-    integration.validate_tauri_bundles(tmp_path, {})
+    integration.validate_tauri_bundles(
+        tmp_path, {"CARGO_TARGET_DIR": str(shared_target)}
+    )
 
 
 def test_tauri_validator_rejects_nonexecutable_appimage(tmp_path: Path) -> None:

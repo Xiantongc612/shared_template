@@ -3,9 +3,19 @@ name: Generated integration
 
 on:
   pull_request:
+    paths:
+      - "copier.yml"
+      - "template/**"
+      - "scripts/**"
+      - ".github/workflows/integration.yml"
   push:
     branches:
       - main
+    paths:
+      - "copier.yml"
+      - "template/**"
+      - "scripts/**"
+      - ".github/workflows/integration.yml"
   workflow_dispatch:
 
 permissions:
@@ -56,13 +66,9 @@ jobs:
             family: fastapi
             timeout: 45
             e2e: false
-          - case: tauri
+          - case: tauri-all
             family: tauri
-            timeout: 75
-            e2e: false
-          - case: tauri-integrations
-            family: tauri
-            timeout: 90
+            timeout: 120
             e2e: true
     steps:
       - name: Check out repository
@@ -117,5 +123,6 @@ jobs:
           restore-keys: integration-${{ runner.os }}-playwright-${{ matrix.case }}-
       - name: Validate generated project
         env:
+          CARGO_TARGET_DIR: ${{ runner.temp }}/tauri-cargo
           DOCKER_CACHE_ARGS: ${{ matrix.family == 'fastapi' && '--cache-from type=gha,scope=integration-fastapi --cache-to type=gha,mode=max,scope=integration-fastapi' || '' }}
         run: devbox run "integration:${{ matrix.case }}"

@@ -55,6 +55,9 @@
       "integration:tauri-integrations": [
         "uv run --locked python scripts/generated_integration.py tauri-integrations"
       ],
+      "integration:tauri-all": [
+        "uv run --locked python scripts/generated_integration.py tauri-all"
+      ],
       "integration:hono": [
         "uv run --locked python scripts/generated_integration.py hono"
       ],

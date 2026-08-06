@@ -95,6 +95,10 @@ CASE_LIST = (
 )
 CASES = {case.name: case for case in CASE_LIST}
 
+CASE_GROUPS: dict[str, tuple[IntegrationCase, ...]] = {
+    "tauri-all": (CASES["tauri"], CASES["tauri-integrations"]),
+}
+
 
 def run(arguments: Sequence[str], cwd: Path, environment: Mapping[str, str]) -> None:
     subprocess.run(arguments, cwd=cwd, env=environment, check=True)
@@ -209,7 +213,13 @@ def _is_native_executable(item: Path, app_run: Path) -> bool:
 def validate_tauri_bundles(
     project: Path, environment: Mapping[str, str] | None = None
 ) -> None:
-    bundle = project / "client" / "src-tauri" / "target" / "release" / "bundle"
+    command_environment = environment or os.environ.copy()
+    cargo_target = command_environment.get("CARGO_TARGET_DIR")
+    if cargo_target:
+        target = Path(cargo_target)
+    else:
+        target = project / "client" / "src-tauri" / "target"
+    bundle = target / "release" / "bundle"
     debs = list((bundle / "deb").glob("*.deb"))
     appimages = list((bundle / "appimage").glob("*.AppImage"))
     if not debs or any(artifact.stat().st_size == 0 for artifact in debs):
@@ -220,7 +230,6 @@ def validate_tauri_bundles(
         if not appimage.stat().st_mode & stat.S_IXUSR:
             raise RuntimeError(f"AppImage is not executable: {appimage}")
 
-    command_environment = environment or os.environ.copy()
     for deb in debs:
         metadata = subprocess.run(
             ["dpkg-deb", "--field", str(deb), "Package", "Version", "Architecture"],
@@ -458,9 +467,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Render and validate generated component projects."
     )
-    parser.add_argument("case", choices=[*CASES, "all"])
+    parser.add_argument("case", choices=[*CASES, "all", *CASE_GROUPS])
     arguments = parser.parse_args()
-    selected = CASE_LIST if arguments.case == "all" else (CASES[arguments.case],)
+    if arguments.case == "all":
+        selected = CASE_LIST
+    elif arguments.case in CASE_GROUPS:
+        selected = CASE_GROUPS[arguments.case]
+    else:
+        selected = (CASES[arguments.case],)
 
     with TemporaryDirectory(prefix="shared-template-integration-") as temporary:
         workspace = Path(temporary)
