@@ -141,6 +141,21 @@ fastapi_pydantic_ai:
   default: false
   when: "{{ 'backend' in components and 'fastapi' in backend_variants }}"
 
+cache_nix:
+  type: bool
+  help: Cache the Nix store used by Devbox in GitHub Actions.
+  default: true
+
+cache_docker:
+  type: bool
+  help: Cache Docker build layers for container builds in GitHub Actions.
+  default: true
+
+cache_downloads:
+  type: bool
+  help: Cache package download stores (Bun, Cargo, uv, Playwright) in GitHub Actions.
+  default: true
+
 frontend_artifact:
   type: str
   default: >-

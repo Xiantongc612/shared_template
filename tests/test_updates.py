@@ -59,6 +59,9 @@ def test_copier_updates_answers_from_historical_commit(tmp_path: Path) -> None:
         **historical_answers,
         "cloudflare_project_id": "historical-app",
         "client_identifier": "com.example.historical-app",
+        "cache_nix": True,
+        "cache_docker": True,
+        "cache_downloads": True,
     }
     tauri_config = yaml.safe_load(
         (project / "client" / "src-tauri" / "tauri.conf.json").read_text()
