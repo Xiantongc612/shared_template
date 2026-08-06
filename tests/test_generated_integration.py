@@ -25,6 +25,8 @@ def test_cases_cover_minimal_and_all_compatible_integrations() -> None:
         "hono-integrations",
         "fastapi",
         "fastapi-integrations",
+        "scripts",
+        "scripts-integrations",
     ]
     assert [case.family for case in integration.CASE_LIST] == [
         "react",
@@ -37,6 +39,8 @@ def test_cases_cover_minimal_and_all_compatible_integrations() -> None:
         "hono",
         "fastapi",
         "fastapi",
+        "scripts",
+        "scripts",
     ]
     assert integration.CASES["react-integrations"].answers == {
         "frontend_playwright": True,
@@ -59,6 +63,12 @@ def test_cases_cover_minimal_and_all_compatible_integrations() -> None:
     assert (
         integration.CASES["fastapi-integrations"].answers["fastapi_pydantic_ai"] is True
     )
+    assert integration.CASES["scripts"].answers == {"components": ["scripts"]}
+    assert integration.CASES["scripts-integrations"].answers == {
+        "components": ["scripts"],
+        "python_data_analysis": True,
+        "python_duckdb": True,
+    }
 
 
 def test_root_devbox_exposes_exact_focused_commands() -> None:
@@ -321,6 +331,33 @@ def test_fastapi_validator_rejects_malformed_descriptor(tmp_path: Path) -> None:
 
     with pytest.raises(RuntimeError, match="size mismatch"):
         integration.validate_fastapi_oci(tmp_path)
+
+
+def test_scripts_validator_runs_generated_console_script(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[list[str]] = []
+
+    def fake_run(
+        arguments: integration.Sequence[str],
+        cwd: Path,
+        environment: integration.Mapping[str, str],
+    ) -> None:
+        calls.append(list(arguments))
+
+    monkeypatch.setattr(integration, "run", fake_run)
+
+    integration.validate_scripts_component(tmp_path, {})
+
+    assert calls[0] == [
+        "uv",
+        "run",
+        "--project",
+        "scripts",
+        "utility-scripts",
+        "--name",
+        "integration",
+    ]
 
 
 def test_artifact_dispatch_uses_component_family(

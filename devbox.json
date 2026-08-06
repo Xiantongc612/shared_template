@@ -69,6 +69,12 @@
       ],
       "integration:fastapi-integrations": [
         "uv run --locked python scripts/generated_integration.py fastapi-integrations"
+      ],
+      "integration:scripts": [
+        "uv run --locked python scripts/generated_integration.py scripts"
+      ],
+      "integration:scripts-integrations": [
+        "uv run --locked python scripts/generated_integration.py scripts-integrations"
       ]
     }
   }

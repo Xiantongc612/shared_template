@@ -17,7 +17,7 @@ from urllib.parse import unquote, urlsplit
 from copier import run_copy
 
 ROOT = Path(__file__).parents[1]
-ComponentFamily = Literal["react", "astro", "tauri", "hono", "fastapi"]
+ComponentFamily = Literal["react", "astro", "tauri", "hono", "fastapi", "scripts"]
 
 
 @dataclass(frozen=True)
@@ -90,6 +90,16 @@ CASE_LIST = (
             "components": ["backend"],
             "backend_variants": ["fastapi"],
             "fastapi_pydantic_ai": True,
+        },
+    ),
+    IntegrationCase("scripts", "scripts", {"components": ["scripts"]}),
+    IntegrationCase(
+        "scripts-integrations",
+        "scripts",
+        {
+            "components": ["scripts"],
+            "python_data_analysis": True,
+            "python_duckdb": True,
         },
     ),
 )
@@ -390,6 +400,24 @@ def validate_fastapi_oci(project: Path) -> None:
         raise RuntimeError("OCI image config lacks the expected uvicorn command")
 
 
+def validate_scripts_component(
+    project: Path, environment: Mapping[str, str] | None = None
+) -> None:
+    run(
+        [
+            "uv",
+            "run",
+            "--project",
+            "scripts",
+            "utility-scripts",
+            "--name",
+            "integration",
+        ],
+        project,
+        environment or os.environ.copy(),
+    )
+
+
 def assert_artifacts(
     case: IntegrationCase, project: Path, environment: Mapping[str, str] | None = None
 ) -> None:
@@ -400,8 +428,10 @@ def assert_artifacts(
         validate_hono_bundle(project, environment)
     elif case.family == "tauri":
         validate_tauri_bundles(project, environment)
-    else:
+    elif case.family == "fastapi":
         validate_fastapi_oci(project)
+    else:
+        validate_scripts_component(project, environment)
 
 
 def validate(case: IntegrationCase, source: Path, workspace: Path) -> None:

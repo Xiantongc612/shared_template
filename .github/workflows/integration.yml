@@ -66,6 +66,14 @@ jobs:
             family: fastapi
             timeout: 45
             e2e: false
+          - case: scripts
+            family: scripts
+            timeout: 30
+            e2e: false
+          - case: scripts-integrations
+            family: scripts
+            timeout: 50
+            e2e: false
           - case: tauri-all
             family: tauri
             timeout: 120
@@ -92,7 +100,7 @@ jobs:
           sha256-checksum: eb2d8fb34266ba3befc294d7d6f56e2cd4da2cacb7a0cf52db5b8092575544f8
           disable-nix-access-token: true
       - name: Cache Bun downloads
-        if: matrix.family != 'fastapi'
+        if: matrix.family == 'react' || matrix.family == 'astro' || matrix.family == 'tauri' || matrix.family == 'hono'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.bun/install/cache
