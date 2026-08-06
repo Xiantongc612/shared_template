@@ -13,14 +13,21 @@ into staged validate, release, and deploy workflows and aligned repository
 Devbox commands with the generated project surface. The workflow cache and
 concurrency milestone scopes workflow concurrency, adds prefix-restore
 download caches with opt-out toggles, and migrates Linux CI and native
-artifact builds to Ubuntu 24.04.
+artifact builds to Ubuntu 24.04. The Python scripts component milestone adds an
+independently selectable utility-scripts workspace with opt-in local data
+analysis and DuckDB integrations and no deployable or release artifact.
 
 ## Constraints
 
-- A generated project must select at least one of frontend, client, or backend.
-- Frontend, client, Hono, and FastAPI outputs remain independent and composable.
+- A generated project must select at least one of frontend, client, backend, or
+  Python scripts.
+- Frontend, client, Hono, FastAPI, and Python scripts outputs remain independent
+  and composable.
 - React and Astro are mutually exclusive frontend variants.
 - Hono and FastAPI may be selected independently or together.
+- The Python scripts component produces a local utility workspace and never a
+  deployable or release artifact; its `build` stage validates source
+  compilation only.
 - Optional integrations are opt-in and scoped to their component.
 - Semgrep is shared tooling (like Gitleaks and actionlint), not an optional
   integration. It is always enabled for the repository and every generated
@@ -32,8 +39,9 @@ artifact builds to Ubuntu 24.04.
 - Generated direct dependencies use exact versions and generated lockfiles are
   not part of the template output.
 - CI renders minimal and optional-integration variants of React, Astro, Tauri,
-  Hono, and FastAPI independently. It runs generated checks, tests, applicable
-  browser tests, local builds, and semantic artifact validation.
+  Hono, FastAPI, and Python scripts independently. It runs generated checks,
+  tests, applicable browser tests, local builds, and semantic artifact
+  validation.
 - Local checks and artifact builds must not deploy, publish packages, push images,
   or mutate remote resources.
 - Repository and generated projects expose consistent Devbox command names and
@@ -260,6 +268,63 @@ None.
   `cancel-in-progress` policies consistent with their publication sensitivity.
 - Tests cover the runner pin, the opt-out cache toggles, cache path safety,
   `restore-keys` prefix fallbacks, and repository workflow concurrency.
+
+## Python Scripts Component Milestone
+
+### Approved contracts
+
+- The Python scripts component is an independently selectable and composable
+  component that generates a local utility-scripts workspace under `scripts/`.
+  A generated project must select at least one of frontend, client, backend, or
+  Python scripts.
+- The workspace uses uv as the package manager and Python as the runtime, with
+  the same shared tooling as every generated project: Devbox (gitleaks,
+  actionlint, Semgrep, pre-commit) plus pytest, Ruff, and ty.
+- The distribution, import package, and console script use fixed names
+  (`utility-scripts`, `utility_scripts`, and a `utility-scripts` entry point)
+  following the fixed-name pattern of the other generated components.
+- `python_data_analysis` is an opt-in toggle that adds `pandas`, `numpy`,
+  `matplotlib`, and `jupyter` for local data analysis. `python_duckdb` is a
+  separate opt-in toggle that adds `duckdb`. Both are gated on the Python
+  scripts component, disabled by default, and emit no configuration,
+  dependencies, files, or documentation when unselected.
+- The Python scripts component has no deployable or release artifact. Its
+  `build` command validates that the package sources compile, and generated
+  release automation skips artifact collection and GitHub Release publication
+  when no selected component produces an artifact.
+- Generated Devbox commands mirror the component contract: `init` syncs the uv
+  environment, `fmt` formats sources with Ruff, `check` runs Ruff and ty,
+  `test` runs pytest, and `build` compiles the sources. The uv download-store
+  cache is a single conditional workflow step shared with FastAPI keyed on
+  `**/pyproject.toml`.
+- The integration matrix renders minimal and optional-integration variants of
+  the Python scripts component and validates them by executable behavior rather
+  than a built artifact.
+
+### Remaining work
+
+None.
+
+### Implemented scope
+
+- The Copier questionnaire adds the `Python Scripts` component choice (value
+  `scripts`) and the gated `python_data_analysis` and `python_duckdb` toggles,
+  and the component-selection validator now accepts a Python scripts-only
+  project.
+- `template/_versions.jinja` pins `pandas`, `numpy`, `matplotlib`, `jupyter`,
+  `duckdb`, and `hatchling`, reusing the existing `python`, `python_runtime`,
+  `uv`, `pytest`, `ruff`, and `ty` pins.
+- `template/scripts/` renders the `utility-scripts` package with a `cli` module,
+  conditional `analysis` and `data` modules, and matching tests.
+- Shared templates emit the scripts component's Devbox packages and commands,
+  Python Semgrep rules, gitignore entries, Dependabot uv ecosystem, combined uv
+  download-store caches, and the artifact-free release path, without mentioning
+  the component when unselected.
+- The integration harness adds `scripts` and `scripts-integrations` cases and a
+  validator that runs the generated console script.
+- Tests cover the questionnaire gates, generator files, exact dependency pins,
+  component-aware Semgrep rules, Dependabot coverage, workflow caching and the
+  artifact-free release path, and the integration case matrix.
 
 ## Deferred Design Decisions
 
