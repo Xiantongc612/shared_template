@@ -61,6 +61,11 @@ build or deploy. Pushing a `v*` tag builds the release, requires manual approval
 in the production environment, and publishes a GitHub Release containing the
 selected build artifacts. It does not push container images or publish to an
 application store.
+{% if 'kmp' in components %}
+Kotlin Multiplatform is intentionally excluded from this tag-triggered release
+chain. Use the manually dispatched `package-kmp` workflow for unsigned APK, DMG,
+and MSI Actions artifacts; it does not create or modify a GitHub Release.
+{% endif %}
 {% if ('frontend' in components and frontend_variant == 'astro') or ('backend' in components and 'hono' in backend_variants) %}
 ## Cloudflare deployment
 

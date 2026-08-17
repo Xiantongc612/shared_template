@@ -12,7 +12,7 @@
     "rustc@{{ versions.rust }}",
     "rustfmt@{{ versions.rust }}",
     "clippy@{{ versions.rust }}"{% endif %}{% if 'kmp' in components %},
-    "jdk@{{ versions.kmp_jdk }}",
+    "jetbrains.jdk-no-jcef-17@{{ versions.kmp_jdk }}",
     "gradle@{{ versions.kmp_gradle }}"{% endif %}{% if ('backend' in components and 'fastapi' in backend_variants) or 'scripts' in components %},
     "python@{{ versions.python_runtime }}",
     "uv@{{ versions.uv }}"{% endif %}

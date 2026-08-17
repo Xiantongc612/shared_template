@@ -6,6 +6,7 @@ plugins {
     kotlin("plugin.compose")
     id("org.jetbrains.compose")
     id("com.android.application")
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 kotlin {
@@ -29,6 +30,8 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.components.resources)
+        }
+        androidMain.dependencies {
             implementation("androidx.activity:activity-compose:{{ versions.kmp_activity }}")
         }
         commonTest.dependencies {
