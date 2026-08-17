@@ -95,7 +95,7 @@ def test_kmp_commands_are_separate_and_suppress_astro_fallback(render: Render) -
     assert "gradle -p kmp ktlintFormat" in scripts["fmt"]
     assert "gradle -p kmp ktlintCheck" in scripts["check"]
     assert "gradle -p kmp compileKotlinDesktop" in scripts["check"]
-    assert "gradle -p kmp test" in scripts["test"]
+    assert "gradle -p kmp :composeApp:desktopTest" in scripts["test"]
     assert "gradle -p kmp compileKotlinDesktop" in scripts["build"]
     assert "No unit tests configured" not in str(scripts["test"])
     assert not any("build" in command for command in scripts["check"])

@@ -77,7 +77,7 @@
         "bun run --cwd backend/hono test"{% if 'fastapi' in backend_variants or 'scripts' in components %},{% endif %}{% endif %}{% if 'backend' in components and 'fastapi' in backend_variants %}
         "uv run --project backend/fastapi pytest backend/fastapi"{% if 'scripts' in components %},{% endif %}{% endif %}{% if 'scripts' in components %}
          "uv run --project scripts pytest scripts"{% endif %}{% if 'kmp' in components %}{% if ('frontend' in components and frontend_variant == 'react') or 'client' in components or ('backend' in components and ('hono' in backend_variants or 'fastapi' in backend_variants)) or 'scripts' in components %},{% endif %}
-         "gradle -p kmp test"{% endif %}{% if frontend_variant | default('') == 'astro' and 'client' not in components and 'scripts' not in components and 'kmp' not in components and ('backend' not in components or not backend_variants) %}
+         "gradle -p kmp :composeApp:desktopTest"{% endif %}{% if frontend_variant | default('') == 'astro' and 'client' not in components and 'scripts' not in components and 'kmp' not in components and ('backend' not in components or not backend_variants) %}
         "echo 'No unit tests configured.'"{% endif %}
       ]{% if frontend_playwright | default(false) or client_playwright | default(false) %},
       "test:e2e": [{% if frontend_playwright | default(false) %}

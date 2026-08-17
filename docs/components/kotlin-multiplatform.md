@@ -7,7 +7,7 @@
 - Development command: `gradle -p kmp run` on a desktop host
 - Formatting commands: `gradle -p kmp ktlintFormat`
 - Validation commands: `gradle -p kmp ktlintCheck` and desktop compilation
-- Test commands: `gradle -p kmp test`
+- Test commands: `gradle -p kmp :composeApp:desktopTest`
 - Manual packaging: `package-kmp` uploads unsigned Android APK, macOS DMG, and Windows MSI Actions artifacts
 
 ## Local architecture
