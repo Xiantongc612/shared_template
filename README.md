@@ -146,7 +146,7 @@ under `kmp/` with shared UI and logic. It targets Android API 24+, iOS 15+
 Desktop targets use Compose Desktop/JVM.
 
 - Kotlin 2.2.20 and Compose Multiplatform 1.8.2
-- Gradle 8.11.1 with JDK 17
+- Gradle 8.10.2 with JDK 17
 - Linux integration compiles and tests common, Android, and desktop JVM sources
 - Normal validation never signs, packages, publishes, or deploys applications
 - Manually dispatched packaging uploads unsigned APK, DMG, and MSI Actions artifacts

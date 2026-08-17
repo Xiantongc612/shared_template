@@ -87,7 +87,7 @@ def test_generated_direct_dependencies_are_exact_without_lockfiles(
     assert all("@latest" not in package for package in devbox["packages"])
     assert any(package.startswith("python@") for package in devbox["packages"])
     assert "jetbrains.jdk-no-jcef-17@17.0.15-b1381" in devbox["packages"]
-    assert "gradle@8.11.1" in devbox["packages"]
+    assert "gradle@8.10.2" in devbox["packages"]
     semgrep = next(
         package for package in devbox["packages"] if package.startswith("semgrep@")
     )
