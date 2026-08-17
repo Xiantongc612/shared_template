@@ -409,6 +409,41 @@ def test_fastapi_workflows_omit_unselected_runtime_setup(render: Render) -> None
     assert "fastapi-backend.tar" in all_text
 
 
+def test_kmp_packaging_is_manual_and_read_only(render: Render) -> None:
+    project = render("KMPPackage", {"components": ["kmp"]})
+    workflows = load_workflows(project)
+    package = workflows["package-kmp.yml"]
+    package_text = (project / ".github" / "workflows" / "package-kmp.yml").read_text()
+
+    assert package[True] == {"workflow_dispatch": None}
+    assert set(package["jobs"]) == {"android", "apple", "windows"}
+    assert all(job["timeout-minutes"] > 0 for job in package["jobs"].values())
+    assert (
+        "contents" not in package["permissions"]
+        or package["permissions"]["contents"] == "read"
+    )
+    assert "gh release" not in package_text
+    assert "upload-artifact@" in package_text
+    assert "assembleDebug" in package_text
+    assert "packageDmg" in package_text
+    assert "packageMsi" in package_text
+
+
+def test_kmp_gradle_cache_is_download_only(render: Render) -> None:
+    project = render("KMPWorkflowCache", {"components": ["kmp"]})
+    workflows = load_workflows(project)
+    paths = {
+        path
+        for workflow in workflows.values()
+        for job in workflow["jobs"].values()
+        for step in job["steps"]
+        if step.get("name") == "Cache Gradle downloads"
+        for path in step["with"]["path"].splitlines()
+    }
+
+    assert paths == {"~/.gradle/caches/modules-2", "~/.gradle/wrapper/dists"}
+
+
 def test_scripts_only_release_skips_artifact_publication(render: Render) -> None:
     project = render("ScriptsRelease", {"components": ["scripts"]})
     release = load_workflows(project)["release.yml"]

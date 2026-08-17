@@ -4,7 +4,7 @@
 
 - Read `README.md` for the implemented component model and `PLAN.md` for current constraints and deferred design decisions before making architectural changes.
 - Keep components independent. Do not invent a universal generated layout, shared UI package, Docker Compose setup, or service orchestration without an explicit design decision.
-- Treat frontend, client, Hono, and FastAPI as separate generators with component-specific outputs.
+- Treat frontend, client, Hono, FastAPI, Python scripts, and Kotlin Multiplatform as separate generators with component-specific outputs.
 - Do not implement deferred capabilities without an explicit design decision.
 - Keep the implemented Cloudflare infrastructure and releases for Hono and static
   Astro component-owned rather than introducing shared runtime dependencies.
@@ -29,11 +29,12 @@
 
 ## Copier design rules
 
-- Require at least one of Frontend, Client, or Backend.
+- Require at least one of Frontend, Client, Backend, Python Scripts, or Kotlin Multiplatform.
 - Use React as the non-interactive default frontend selection.
 - Keep React and Astro mutually exclusive frontend variants.
 - Allow Hono, FastAPI, or both when Backend is selected; reject an empty backend selection.
 - Keep frontend and client optional integrations independently selectable.
+- Keep Kotlin Multiplatform under `kmp/` with Compose UI and logic independent from frontend and Tauri source.
 - Keep optional integrations disabled by default.
 - Treat Semgrep SAST as shared tooling (like Gitleaks and actionlint), always
   enabled for the repository and every generated project with vendored rules.
@@ -83,9 +84,10 @@
   `node_modules`, virtual environments, Cargo targets, OpenTofu state, or resolved
   backend configuration. Give every cache step a `restore-keys` prefix fallback so
   a superseded lockfile or version hash still restores the previous download
-  store and only the changed parts are re-downloaded.
+  store and only the changed parts are re-downloaded. Gradle caches may include
+  only dependency modules and wrapper distributions, never project build state.
 - Cache toggles are opt-out and default to enabled. The questionnaire always
-  asks `cache_downloads` (Bun, Cargo, uv, and Playwright download-store steps),
+  asks `cache_downloads` (Bun, Cargo, Gradle, uv, and Playwright download-store steps),
   `cache_nix` (Devbox Nix store cache), and `cache_docker` (FastAPI
   `DOCKER_CACHE_ARGS`); each toggle removes only its own cache surface and never
   the build behavior itself. Never cache Cargo `target/` directories.

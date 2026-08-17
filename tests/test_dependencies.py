@@ -9,7 +9,7 @@ def test_generated_direct_dependencies_are_exact_without_lockfiles(
     render: Render,
 ) -> None:
     answers = {
-        "components": ["frontend", "client", "backend", "scripts"],
+        "components": ["frontend", "client", "backend", "scripts", "kmp"],
         "backend_variants": ["hono", "fastapi"],
         "frontend_playwright": True,
         "frontend_ai_sdk": True,
@@ -86,6 +86,8 @@ def test_generated_direct_dependencies_are_exact_without_lockfiles(
     devbox = json.loads((project / "devbox.json").read_text())
     assert all("@latest" not in package for package in devbox["packages"])
     assert any(package.startswith("python@") for package in devbox["packages"])
+    assert "jdk@17.0.13" in devbox["packages"]
+    assert "gradle@8.11.1" in devbox["packages"]
     semgrep = next(
         package for package in devbox["packages"] if package.startswith("semgrep@")
     )
@@ -98,6 +100,7 @@ def test_generated_direct_dependencies_are_exact_without_lockfiles(
         "bun.lockb",
         "Cargo.lock",
         "uv.lock",
+        "gradle.lockfile",
     }
     assert not any(path.name in lockfiles for path in project.rglob("*"))
     gitignore = (project / ".gitignore").read_text().splitlines()

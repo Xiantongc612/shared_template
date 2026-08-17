@@ -5,8 +5,8 @@
 Repository Python dependencies are constrained in `pyproject.toml` and resolved
 in `uv.lock`. Devbox packages are resolved in `devbox.lock`. Generated component
 manifests use exact direct dependency versions and do not include committed
-lockfiles. Initialization creates local Devbox, Bun, uv, and OpenTofu lockfiles,
-while Cargo creates its local lockfile on first resolution; generated projects
+lockfiles. Initialization creates local Devbox, Bun, Gradle, uv, and OpenTofu
+lockfiles, while Cargo creates its local lockfile on first resolution; generated projects
 ignore these files. Transitive dependency versions remain ecosystem-resolved.
 
 ## Dependabot
@@ -18,7 +18,7 @@ mirror the same version into `devbox.json` and `template/_versions.jinja` before
 merging the pull request.
 
 Generated projects render a component-aware `.github/dependabot.yml` covering
-`github-actions` plus `bun`, `cargo`, `uv`, and `opentofu` for selected
+`github-actions` plus `bun`, `cargo`, `gradle`, `uv`, and `opentofu` for selected
 components. These lockfile-based ecosystems stay inactive until a project owner
 commits the generated lockfiles, which `.gitignore` excludes by default;
 Dependabot then proposes updates directly in the generated project.
@@ -83,8 +83,8 @@ minimum version.
 
 `devbox run check` validates repository source and deterministic template
 rendering, and `devbox run test` runs the repository test suite. `devbox run
-integration` additionally renders React, Astro, Tauri, Hono, FastAPI, and
-Python scripts projects independently, then runs each generated project's
+integration` additionally renders React, Astro, Tauri, Hono, FastAPI, Python
+scripts, and Kotlin Multiplatform projects independently, then runs each generated project's
 `init`, `check`, `test`, and `build` commands. Focused `integration:<component>`
 commands support local maintenance.
 
@@ -93,6 +93,12 @@ manually. Tauri validation requires Linux desktop build libraries and both Debia
 and AppImage bundles. FastAPI artifact validation requires Docker Buildx and a
 valid OCI archive. These builds remain local validation and do not deploy or
 publish artifacts.
+
+Kotlin Multiplatform integration is Linux-only. It validates rendering and
+Linux-compatible Gradle compilation; macOS and Windows packaging is exposed by
+the generated manually dispatched `package-kmp` workflow and is not exercised
+by repository integration. Gradle caches must remain limited to
+`~/.gradle/caches/modules-2` and `~/.gradle/wrapper/dists`.
 
 ## Versioning
 

@@ -28,8 +28,8 @@ jobs:
           devbox-version: {{ versions.devbox_cli }}
           sha256-checksum: {{ versions.devbox_cli_checksum }}
           disable-nix-access-token: true
+{% if cache_downloads | default(true) %}
       - name: Cache Gradle downloads
-        if: {{ "true" if cache_downloads | default(true) else "false" }}
         uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
         with:
           path: |
@@ -37,6 +37,7 @@ jobs:
             ~/.gradle/wrapper/dists
           key: package-kmp-gradle-{% raw %}${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('kmp/**/*.gradle.kts', 'kmp/gradle/libs.versions.toml') }}{% endraw %}
           restore-keys: package-kmp-gradle-{% raw %}${{ runner.os }}-${{ runner.arch }}-{% endraw %}
+{% endif %}
       - name: Build unsigned Android APK
         run: gradle -p kmp :composeApp:assembleDebug
       - name: Upload Android APK

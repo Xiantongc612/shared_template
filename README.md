@@ -24,11 +24,12 @@ case.
 
 ## Component selection rules
 
-- A generated project must include at least one frontend, client, backend, or Python scripts component.
+- A generated project must include at least one frontend, client, backend, Python scripts, or Kotlin Multiplatform component.
 - Components are independently selectable and may be combined in one generated project.
 - The frontend has two mutually exclusive variants: React for application-style static sites and Astro for content-oriented static sites.
 - The backend may include Hono, FastAPI, or both.
 - The Python scripts component produces a local utility workspace with no deployable or release artifact; its build stage compiles sources only.
+- Kotlin Multiplatform produces an independent Compose application under `kmp/` targeting Android, iOS, macOS, and Windows.
 - When multiple components are selected, each produces an independent output. Selecting both a frontend and a client does not imply shared source code or a shared UI package.
 - Optional integrations are opt-in unless a component lists them as part of its core stack.
 - Each component has a fixed artifact type; artifact targets are not questionnaire options.
@@ -136,3 +137,17 @@ The component's `build` stage validates that the package sources compile.
 Generated release automation skips artifact collection and GitHub Release
 publication when a generated project selects only components that produce no
 artifact.
+
+## Kotlin Multiplatform
+
+The Kotlin Multiplatform component produces a Compose Multiplatform application
+under `kmp/` with shared UI and logic. It targets Android API 24+, iOS 15+
+(arm64 and Apple Silicon simulator), macOS 13+ arm64, and Windows 10+ x64.
+Desktop targets use Compose Desktop/JVM.
+
+- Kotlin 2.2.20 and Compose Multiplatform 1.8.2
+- Gradle 8.11.1 with JDK 17
+- Linux integration compiles and tests common, Android, and desktop JVM sources
+- Normal validation never signs, packages, publishes, or deploys applications
+- Manually dispatched packaging uploads unsigned APK, DMG, and MSI Actions artifacts
+- No GitHub Release, application-store, signing, or notarization automation
