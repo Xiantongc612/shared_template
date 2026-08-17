@@ -19,9 +19,9 @@ analysis and DuckDB integrations and no deployable or release artifact.
 
 ## Constraints
 
-- A generated project must select at least one of frontend, client, backend, or
-  Python scripts.
-- Frontend, client, Hono, FastAPI, and Python scripts outputs remain independent
+- A generated project must select at least one of frontend, client, backend,
+  Python scripts, or Kotlin Multiplatform.
+- Frontend, client, Hono, FastAPI, Python scripts, and Kotlin Multiplatform outputs remain independent
   and composable.
 - React and Astro are mutually exclusive frontend variants.
 - Hono and FastAPI may be selected independently or together.
@@ -39,7 +39,7 @@ analysis and DuckDB integrations and no deployable or release artifact.
 - Generated direct dependencies use exact versions and generated lockfiles are
   not part of the template output.
 - CI renders minimal and optional-integration variants of React, Astro, Tauri,
-  Hono, FastAPI, and Python scripts independently. It runs generated checks,
+  Hono, FastAPI, Python scripts, and Kotlin Multiplatform independently. It runs generated checks,
   tests, applicable browser tests, local builds, and semantic artifact
   validation.
 - Local checks and artifact builds must not deploy, publish packages, push images,
@@ -325,6 +325,55 @@ None.
 - Tests cover the questionnaire gates, generator files, exact dependency pins,
   component-aware Semgrep rules, Dependabot coverage, workflow caching and the
   artifact-free release path, and the integration case matrix.
+
+## Kotlin Multiplatform Component Milestone
+
+### Approved contracts
+
+- Kotlin Multiplatform is a new independently selectable component with the
+  stable Copier value `kmp` and output boundary `kmp/`. It does not replace or
+  alter the existing Tauri `client` component and may be selected alongside it.
+- The component is an application generator using Compose Multiplatform for
+  shared UI and shared logic. It does not share source with the frontend or
+  client components.
+- Supported targets are Android (API 24), iOS (iOS 15, device arm64 and Apple
+  Silicon simulator), macOS (macOS 13, arm64), and Windows (Windows 10, x64).
+  Desktop targets use Compose Desktop/JVM; Kotlin/Native desktop targets are
+  not generated.
+- `kmp_identifier` is a required-on-selection, validated reverse-domain
+  identifier used to derive Kotlin, Android, iOS, macOS, and Windows identity
+  metadata. It remains distinct from `client_identifier`.
+- Generated local and pull-request commands compile and test common, Android,
+  and desktop JVM sources on Ubuntu. Apple and native Windows packaging is not
+  part of normal Linux integration validation.
+- `build` is non-publishing and produces compile/test build outputs only. It
+  never signs, notarizes, uploads, or publishes an application.
+- A generated `package-kmp` workflow is manually dispatched and uploads unsigned
+  Android APK, macOS DMG, and Windows MSI artifacts as GitHub Actions artifacts.
+  It also compiles the iOS Apple Silicon simulator application but does not
+  publish it. It does not create or modify GitHub Releases.
+- Gradle dependency downloads may be cached through the existing opt-out
+  `cache_downloads` toggle. Project Gradle state, build outputs, credentials,
+  and signing material are never cached.
+- The component has no Cloudflare deployment, application-store publication,
+  signing, notarization, or cross-component orchestration behavior.
+
+### Implemented scope
+
+- The questionnaire, answer compatibility coverage, generated Gradle/Compose
+  project, Devbox commands, Semgrep rules, Dependabot configuration, generated
+  documentation, and component-specific gitignore entries are implemented.
+- Generated validation includes Kotlin/Gradle checks and tests without building
+  platform packages on Linux. The repository integration matrix includes a
+  Linux KMP case with semantic validation of Linux-compatible build outputs.
+- Generated workflows include safe Gradle download caching and a manually
+  dispatched, read-only packaging workflow for unsigned platform artifacts.
+
+### Remaining work
+
+- Native packaging can only be exercised on the corresponding macOS and Windows
+  runners; Linux repository validation covers rendering, workflow semantics, and
+  Linux-compatible compilation.
 
 ## Deferred Design Decisions
 
