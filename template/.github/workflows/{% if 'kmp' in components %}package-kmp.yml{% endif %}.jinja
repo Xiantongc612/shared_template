@@ -1,0 +1,97 @@
+{% from "template/_versions.jinja" import versions -%}
+---
+name: Package Kotlin Multiplatform
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: package-kmp
+  cancel-in-progress: false
+
+jobs:
+  android:
+    runs-on: {{ versions.ubuntu_runner }}
+    timeout-minutes: 60
+    steps:
+      - name: Check out source
+        uses: actions/checkout@{{ versions.checkout_action_sha }} # {{ versions.checkout_action }}
+        with:
+          persist-credentials: false
+      - name: Install Devbox
+        uses: jetify-com/devbox-install-action@{{ versions.devbox_action_sha }} # {{ versions.devbox_action }}
+        with:
+          enable-cache: {{ "true" if cache_nix | default(true) else "false" }}
+          devbox-version: {{ versions.devbox_cli }}
+          sha256-checksum: {{ versions.devbox_cli_checksum }}
+          disable-nix-access-token: true
+      - name: Cache Gradle downloads
+        if: {{ "true" if cache_downloads | default(true) else "false" }}
+        uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
+        with:
+          path: |
+            ~/.gradle/caches/modules-2
+            ~/.gradle/wrapper/dists
+          key: package-kmp-gradle-{% raw %}${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('kmp/**/*.gradle.kts', 'kmp/gradle/libs.versions.toml') }}{% endraw %}
+          restore-keys: package-kmp-gradle-{% raw %}${{ runner.os }}-${{ runner.arch }}-{% endraw %}
+      - name: Build unsigned Android APK
+        run: gradle -p kmp :composeApp:assembleDebug
+      - name: Upload Android APK
+        uses: actions/upload-artifact@{{ versions.upload_artifact_action_sha }} # {{ versions.upload_artifact_action }}
+        with:
+          name: kmp-android-apk
+          path: kmp/composeApp/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+  apple:
+    runs-on: macos-14
+    timeout-minutes: 90
+    steps:
+      - name: Check out source
+        uses: actions/checkout@{{ versions.checkout_action_sha }} # {{ versions.checkout_action }}
+        with:
+          persist-credentials: false
+      - name: Install Devbox
+        uses: jetify-com/devbox-install-action@{{ versions.devbox_action_sha }} # {{ versions.devbox_action }}
+        with:
+          enable-cache: {{ "true" if cache_nix | default(true) else "false" }}
+          devbox-version: {{ versions.devbox_cli }}
+          sha256-checksum: {{ versions.devbox_cli_checksum }}
+          disable-nix-access-token: true
+      - name: Compile iOS simulator and macOS package
+        run: |
+          gradle -p kmp :composeApp:linkDebugFrameworkIosSimulatorArm64
+          gradle -p kmp :composeApp:packageDmg
+      - name: Upload macOS DMG
+        uses: actions/upload-artifact@{{ versions.upload_artifact_action_sha }} # {{ versions.upload_artifact_action }}
+        with:
+          name: kmp-macos-dmg
+          path: kmp/composeApp/build/compose/binaries/main/dmg/*.dmg
+          if-no-files-found: error
+
+  windows:
+    runs-on: windows-2025
+    timeout-minutes: 90
+    steps:
+      - name: Check out source
+        uses: actions/checkout@{{ versions.checkout_action_sha }} # {{ versions.checkout_action }}
+        with:
+          persist-credentials: false
+      - name: Install Devbox
+        uses: jetify-com/devbox-install-action@{{ versions.devbox_action_sha }} # {{ versions.devbox_action }}
+        with:
+          enable-cache: {{ "true" if cache_nix | default(true) else "false" }}
+          devbox-version: {{ versions.devbox_cli }}
+          sha256-checksum: {{ versions.devbox_cli_checksum }}
+          disable-nix-access-token: true
+      - name: Build unsigned Windows MSI
+        run: gradle -p kmp :composeApp:packageMsi
+      - name: Upload Windows MSI
+        uses: actions/upload-artifact@{{ versions.upload_artifact_action_sha }} # {{ versions.upload_artifact_action }}
+        with:
+          name: kmp-windows-msi
+          path: kmp/composeApp/build/compose/binaries/main/msi/*.msi
+          if-no-files-found: error

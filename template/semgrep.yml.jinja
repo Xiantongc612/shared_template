@@ -68,6 +68,35 @@ rules:
       cwe:
         - "CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
 {% endif %}
+{% if 'kmp' in components %}
+  - id: kotlin-runtime-shell
+    pattern-either:
+      - pattern: Runtime.getRuntime().exec(...)
+      - pattern: ProcessBuilder(...)
+    message: >-
+      Starting a process from application code can introduce command injection.
+      Avoid shell execution or validate every argument against an allowlist.
+    languages:
+      - kotlin
+    severity: WARNING
+    metadata:
+      cwe:
+        - "CWE-78: Improper Neutralization of Special Elements used in an OS Command ('OS Command Injection')"
+
+  - id: kotlin-insecure-tls
+    pattern-either:
+      - pattern: $CONTEXT.sslSocketFactory(...)
+      - pattern: $CONTEXT.hostnameVerifier = ...
+    message: >-
+      Custom TLS configuration can disable certificate or hostname verification.
+      Keep platform certificate validation enabled.
+    languages:
+      - kotlin
+    severity: WARNING
+    metadata:
+      cwe:
+        - "CWE-295: Improper Certificate Validation"
+{% endif %}
 {% if 'client' in components %}
   - id: rust-shell-injection
     pattern-either:

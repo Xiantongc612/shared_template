@@ -64,6 +64,16 @@ jobs:
           restore-keys: uv-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.python_runtime }}-{{ versions.uv }}-
 {% endif %}
 {% endif %}
+{% if 'kmp' in components and cache_downloads | default(true) %}
+      - name: Cache Gradle downloads
+        uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
+        with:
+          path: |
+            ~/.gradle/caches/modules-2
+            ~/.gradle/wrapper/dists
+          key: gradle-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.kmp_gradle }}-{% raw %}${{ hashFiles('kmp/**/*.gradle.kts', 'kmp/gradle/libs.versions.toml') }}{% endraw %}
+          restore-keys: gradle-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.kmp_gradle }}-
+{% endif %}
       - name: Install Devbox
         uses: jetify-com/devbox-install-action@{{ versions.devbox_action_sha }} # {{ versions.devbox_action }}
         with:
@@ -120,6 +130,16 @@ jobs:
           key: uv-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.python_runtime }}-{{ versions.uv }}-{% raw %}${{ hashFiles('**/pyproject.toml') }}{% endraw %}
           restore-keys: uv-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.python_runtime }}-{{ versions.uv }}-
 {% endif %}
+{% endif %}
+{% if 'kmp' in components and cache_downloads | default(true) %}
+      - name: Cache Gradle downloads
+        uses: actions/cache@{{ versions.cache_action_sha }} # {{ versions.cache_action }}
+        with:
+          path: |
+            ~/.gradle/caches/modules-2
+            ~/.gradle/wrapper/dists
+          key: gradle-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.kmp_gradle }}-{% raw %}${{ hashFiles('kmp/**/*.gradle.kts', 'kmp/gradle/libs.versions.toml') }}{% endraw %}
+          restore-keys: gradle-{% raw %}${{ runner.os }}-${{ runner.arch }}{% endraw %}-{{ versions.kmp_gradle }}-
 {% endif %}
       - name: Install Devbox
         uses: jetify-com/devbox-install-action@{{ versions.devbox_action_sha }} # {{ versions.devbox_action }}

@@ -78,6 +78,10 @@ jobs:
             family: tauri
             timeout: 120
             e2e: true
+          - case: kmp
+            family: kmp
+            timeout: 60
+            e2e: false
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -129,6 +133,15 @@ jobs:
           path: ~/.cache/ms-playwright
           key: integration-${{ runner.os }}-playwright-${{ matrix.case }}-${{ hashFiles('template/**/package.json.jinja') }}
           restore-keys: integration-${{ runner.os }}-playwright-${{ matrix.case }}-
+      - name: Cache Gradle downloads
+        if: matrix.family == 'kmp'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.gradle/caches/modules-2
+            ~/.gradle/wrapper/dists
+          key: integration-${{ runner.os }}-gradle-${{ matrix.case }}-${{ hashFiles('template/**/build.gradle.kts.jinja', 'template/**/gradle/libs.versions.toml.jinja') }}
+          restore-keys: integration-${{ runner.os }}-gradle-${{ matrix.case }}-
       - name: Validate generated project
         env:
           CARGO_TARGET_DIR: ${{ runner.temp }}/tauri-cargo

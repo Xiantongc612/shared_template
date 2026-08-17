@@ -73,9 +73,12 @@
       "integration:scripts": [
         "uv run --locked python scripts/generated_integration.py scripts"
       ],
-      "integration:scripts-integrations": [
-        "uv run --locked python scripts/generated_integration.py scripts-integrations"
-      ]
+    "integration:scripts-integrations": [
+      "uv run --locked python scripts/generated_integration.py scripts-integrations"
+    ],
+    "integration:kmp": [
+      "uv run --locked python scripts/generated_integration.py kmp"
+    ]
     }
   }
 }

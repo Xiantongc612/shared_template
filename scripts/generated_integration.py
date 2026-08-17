@@ -17,7 +17,9 @@ from urllib.parse import unquote, urlsplit
 from copier import run_copy
 
 ROOT = Path(__file__).parents[1]
-ComponentFamily = Literal["react", "astro", "tauri", "hono", "fastapi", "scripts"]
+ComponentFamily = Literal[
+    "react", "astro", "tauri", "hono", "fastapi", "scripts", "kmp"
+]
 
 
 @dataclass(frozen=True)
@@ -102,6 +104,7 @@ CASE_LIST = (
             "python_duckdb": True,
         },
     ),
+    IntegrationCase("kmp", "kmp", {"components": ["kmp"]}),
 )
 CASES = {case.name: case for case in CASE_LIST}
 
@@ -432,6 +435,21 @@ def validate_scripts_component(
     )
 
 
+def validate_kmp_component(project: Path) -> None:
+    classes = (
+        project
+        / "kmp"
+        / "composeApp"
+        / "build"
+        / "classes"
+        / "kotlin"
+        / "desktop"
+        / "main"
+    )
+    if not classes.is_dir() or not any(classes.rglob("*.class")):
+        raise RuntimeError(f"KMP desktop compilation produced no classes: {classes}")
+
+
 def assert_artifacts(
     case: IntegrationCase, project: Path, environment: Mapping[str, str] | None = None
 ) -> None:
@@ -444,6 +462,8 @@ def assert_artifacts(
         validate_tauri_bundles(project, environment)
     elif case.family == "fastapi":
         validate_fastapi_oci(project)
+    elif case.family == "kmp":
+        validate_kmp_component(project)
     else:
         validate_scripts_component(project, environment)
 

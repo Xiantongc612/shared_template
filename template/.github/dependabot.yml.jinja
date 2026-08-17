@@ -58,3 +58,10 @@ updates:
       interval: weekly
     open-pull-requests-limit: 3
 {% endif %}
+{% if 'kmp' in components %}
+  - package-ecosystem: gradle
+    directory: /kmp
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+{% endif %}
