@@ -85,6 +85,15 @@
   only validates that the package sources compile.
 
 {% endif -%}
+{% if 'kmp' in components -%}
+### Kotlin Multiplatform
+
+- Compose UI and shared logic are under `kmp/`; do not share source with other components.
+- The Gradle/Kotlin toolchain targets Android, iOS arm64, iOS Apple Silicon simulator, macOS arm64, and Windows x64.
+- `check` validates formatting and Linux-compatible compilation; `test` runs common tests; `build` is non-publishing.
+- Native packaging is available only through the manually dispatched `package-kmp` workflow and produces unsigned artifacts.
+
+{% endif -%}
 
 ## GitHub Automation
 

@@ -11,7 +11,9 @@
     "cargo@{{ versions.rust }}",
     "rustc@{{ versions.rust }}",
     "rustfmt@{{ versions.rust }}",
-    "clippy@{{ versions.rust }}"{% endif %}{% if ('backend' in components and 'fastapi' in backend_variants) or 'scripts' in components %},
+    "clippy@{{ versions.rust }}"{% endif %}{% if 'kmp' in components %},
+    "jdk@{{ versions.kmp_jdk }}",
+    "gradle@{{ versions.kmp_gradle }}"{% endif %}{% if ('backend' in components and 'fastapi' in backend_variants) or 'scripts' in components %},
     "python@{{ versions.python_runtime }}",
     "uv@{{ versions.uv }}"{% endif %}
   ],
@@ -25,7 +27,8 @@
         "test -f client/src-tauri/icons/32x32.png && test -f client/src-tauri/icons/128x128.png && test -f client/src-tauri/icons/128x128@2x.png && test -f client/src-tauri/icons/icon.icns && test -f client/src-tauri/icons/icon.ico || bun run --cwd client tauri icon src-tauri/app-icon.svg"{% endif %}{% if 'backend' in components and 'hono' in backend_variants %},
         "bun install --cwd backend/hono"{% endif %}{% if 'backend' in components and 'fastapi' in backend_variants %},
         "uv sync --project backend/fastapi"{% endif %}{% if 'scripts' in components %},
-        "uv sync --project scripts"{% endif %}
+         "uv sync --project scripts"{% endif %}{% if 'kmp' in components %},
+         "gradle -p kmp --version"{% endif %}
       ],
       "fmt": [{% if 'frontend' in components %}
         "bun run --cwd frontend format"{% if frontend_variant == 'astro' or 'client' in components or ('backend' in components and ('hono' in backend_variants or 'fastapi' in backend_variants)) or 'scripts' in components %},{% endif %}{% if frontend_variant == 'astro' %}
@@ -35,7 +38,8 @@
         "bun run --cwd backend/hono format",
         "tofu fmt -recursive backend/hono/infrastructure"{% if 'fastapi' in backend_variants or 'scripts' in components %},{% endif %}{% endif %}{% if 'backend' in components and 'fastapi' in backend_variants %}
         "uv run --project backend/fastapi ruff format backend/fastapi"{% if 'scripts' in components %},{% endif %}{% endif %}{% if 'scripts' in components %}
-        "uv run --project scripts ruff format scripts"{% endif %}
+         "uv run --project scripts ruff format scripts"{% endif %}{% if 'kmp' in components %}{% if 'frontend' in components or 'client' in components or ('backend' in components and ('hono' in backend_variants or 'fastapi' in backend_variants)) or 'scripts' in components %},{% endif %}
+         "gradle -p kmp ktlintFormat"{% endif %}
       ],
       "check": [
         "gitleaks git",
@@ -62,7 +66,9 @@
         "uv run --project backend/fastapi ty check backend/fastapi/app"{% endif %}{% if 'scripts' in components %},
         "uv run --project scripts ruff check scripts",
         "uv run --project scripts ruff format --check scripts",
-        "uv run --project scripts ty check scripts/src"{% endif %}
+         "uv run --project scripts ty check scripts/src"{% endif %}{% if 'kmp' in components %},
+         "gradle -p kmp ktlintCheck",
+         "gradle -p kmp compileKotlinDesktop"{% endif %}
       ],
       "test": [{% if 'frontend' in components and frontend_variant == 'react' %}
         "bun run --cwd frontend test"{% if 'client' in components or ('backend' in components and ('hono' in backend_variants or 'fastapi' in backend_variants)) or 'scripts' in components %},{% endif %}{% endif %}{% if 'client' in components %}
@@ -70,7 +76,8 @@
         "cargo test --manifest-path client/src-tauri/Cargo.toml --all-features"{% if 'backend' in components and ('hono' in backend_variants or 'fastapi' in backend_variants) or 'scripts' in components %},{% endif %}{% endif %}{% if 'backend' in components and 'hono' in backend_variants %}
         "bun run --cwd backend/hono test"{% if 'fastapi' in backend_variants or 'scripts' in components %},{% endif %}{% endif %}{% if 'backend' in components and 'fastapi' in backend_variants %}
         "uv run --project backend/fastapi pytest backend/fastapi"{% if 'scripts' in components %},{% endif %}{% endif %}{% if 'scripts' in components %}
-        "uv run --project scripts pytest scripts"{% endif %}{% if frontend_variant | default('') == 'astro' and 'client' not in components and 'scripts' not in components and ('backend' not in components or not backend_variants) %}
+         "uv run --project scripts pytest scripts"{% endif %}{% if 'kmp' in components %}{% if 'frontend' in components or 'client' in components or ('backend' in components and ('hono' in backend_variants or 'fastapi' in backend_variants)) or 'scripts' in components %},{% endif %}
+         "gradle -p kmp test"{% endif %}{% if frontend_variant | default('') == 'astro' and 'client' not in components and 'scripts' not in components and 'kmp' not in components and ('backend' not in components or not backend_variants) %}
         "echo 'No unit tests configured.'"{% endif %}
       ]{% if frontend_playwright | default(false) or client_playwright | default(false) %},
       "test:e2e": [{% if frontend_playwright | default(false) %}
@@ -83,7 +90,8 @@
         "bun run --cwd backend/hono build"{% if 'fastapi' in backend_variants or 'scripts' in components %},{% endif %}{% endif %}{% if 'backend' in components and 'fastapi' in backend_variants %}
         "mkdir -p backend/fastapi/dist",
         "docker buildx build ${DOCKER_CACHE_ARGS:-} --output type=oci,dest=backend/fastapi/dist/fastapi-backend.tar backend/fastapi"{% if 'scripts' in components %},{% endif %}{% endif %}{% if 'scripts' in components %}
-        "uv run --project scripts python -m compileall -q scripts/src scripts/main.py"{% endif %}
+         "uv run --project scripts python -m compileall -q scripts/src scripts/main.py"{% endif %}{% if 'kmp' in components %}{% if 'frontend' in components or 'client' in components or ('backend' in components and ('hono' in backend_variants or 'fastapi' in backend_variants)) or 'scripts' in components %},{% endif %}
+         "gradle -p kmp compileKotlinDesktop"{% endif %}
       ]
     }
   }

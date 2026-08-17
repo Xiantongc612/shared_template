@@ -1,3 +1,4 @@
+{% from "template/_versions.jinja" import versions -%}
 plugins {
     id("org.jetbrains.kotlin.multiplatform") version "{{ versions.kmp_kotlin }}" apply false
     id("org.jetbrains.kotlin.plugin.compose") version "{{ versions.kmp_kotlin }}" apply false

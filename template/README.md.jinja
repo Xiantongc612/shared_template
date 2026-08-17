@@ -24,6 +24,10 @@ Generated from the `shared_template` Copier template.
 - Python Scripts: utility script workspace
   - Artifact: {{ scripts_artifact }}
 {% endif %}
+{% if 'kmp' in components -%}
+- Kotlin Multiplatform: Compose application
+  - Artifact: {{ kmp_artifact }}
+{% endif %}
 
 ## Project commands
 
@@ -142,6 +146,25 @@ deployable or release artifact.
 The optional integrations add local-analysis dependencies only when their toggle
 is enabled.
 {% endif %}
+{% endif %}
+{% if 'kmp' in components %}
+## Kotlin Multiplatform
+
+The independent Compose Multiplatform application is in `kmp/`. Its application
+identity is `{{ kmp_identifier }}` and it targets Android API 24+, iOS 15+,
+macOS 13+ arm64, and Windows 10+ x64.
+
+```sh
+devbox run fmt
+devbox run check
+devbox run test
+devbox run build
+```
+
+Linux validation compiles and tests common, Android, and desktop JVM sources
+without signing or publishing. Manually dispatch `.github/workflows/package-kmp.yml`
+to upload unsigned APK, DMG, and MSI Actions artifacts; that workflow does not
+create or modify GitHub Releases.
 {% endif %}
 {% if 'backend' in components and 'hono' in backend_variants %}
 ## Hono backend
