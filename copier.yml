@@ -22,12 +22,13 @@ components:
     Client: client
     Backend: backend
     Python Scripts: scripts
+    Kotlin Multiplatform: kmp
   multiselect: true
   default:
     - frontend
   validator: >-
     {% if not components %}
-    Select at least one of Frontend, Client, Backend, or Python Scripts.
+    Select at least one of Frontend, Client, Backend, Python Scripts, or Kotlin Multiplatform.
     {% endif %}
 
 frontend_variant:
@@ -80,6 +81,20 @@ client_identifier:
     Client identifier must be at most 255 characters and use lowercase
     reverse-domain notation with at least two alphanumeric or hyphenated labels;
     labels must not start or end with a hyphen.
+    {% endif %}
+
+kmp_identifier:
+  type: str
+  help: Lowercase reverse-domain identifier for the Kotlin Multiplatform application.
+  default: >-
+    {%- set slug = project_name | lower | regex_replace('[^a-z0-9]+', '-') | regex_replace('^-+|-+$', '') -%}
+    {{- 'com.example.' ~ ((slug[:243] | regex_replace('-+$', '')) or 'app') -}}
+  when: "{{ 'kmp' in components }}"
+  validator: >-
+    {% if kmp_identifier | length > 255 or not (kmp_identifier | regex_search('^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:[.][a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+\\Z')) %}
+    KMP identifier must be at most 255 characters and use lowercase reverse-domain
+    notation with at least two alphanumeric or hyphenated labels; labels must not
+    start or end with a hyphen.
     {% endif %}
 
 frontend_playwright:
@@ -166,7 +181,7 @@ cache_docker:
 
 cache_downloads:
   type: bool
-  help: Cache package download stores (Bun, Cargo, uv, Playwright) in GitHub Actions.
+  help: Cache package download stores (Bun, Cargo, Gradle, uv, Playwright) in GitHub Actions.
   default: true
 
 frontend_artifact:
@@ -197,4 +212,10 @@ scripts_artifact:
   type: str
   default: >-
     {% if 'scripts' in components %}Utility script workspace (no release artifact){% endif %}
+  when: false
+
+kmp_artifact:
+  type: str
+  default: >-
+    {% if 'kmp' in components %}Compose Multiplatform application (compile-only by default){% endif %}
   when: false

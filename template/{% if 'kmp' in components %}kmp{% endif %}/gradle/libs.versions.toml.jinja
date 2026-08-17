@@ -1,0 +1,10 @@
+[versions]
+kotlin = "{{ versions.kmp_kotlin }}"
+compose = "{{ versions.kmp_compose }}"
+agp = "{{ versions.kmp_agp }}"
+
+[plugins]
+kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlinCompose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+androidApplication = { id = "com.android.application", version.ref = "agp" }
+composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose" }

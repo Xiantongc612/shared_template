@@ -1,0 +1,66 @@
+import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+
+plugins {
+    kotlin("multiplatform")
+    kotlin("plugin.compose")
+    id("org.jetbrains.compose")
+    id("com.android.application")
+}
+
+kotlin {
+    jvmToolchain(17)
+    androidTarget()
+    jvm("desktop")
+    listOf(
+        iosArm64(),
+        iosSimulatorArm64(),
+    ).forEach { iosTarget ->
+        iosTarget.binaries.framework {
+            baseName = "ComposeApp"
+            isStatic = true
+        }
+    }
+
+    sourceSets {
+        commonMain.dependencies {
+            implementation(compose.runtime)
+            implementation(compose.foundation)
+            implementation(compose.material3)
+            implementation(compose.ui)
+            implementation(compose.components.resources)
+            implementation("androidx.activity:activity-compose:{{ versions.kmp_activity }}")
+        }
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+        }
+        val desktopMain by getting {
+            dependencies {
+                implementation(compose.desktop.currentOs)
+            }
+        }
+    }
+}
+
+android {
+    namespace = "{{ kmp_identifier }}"
+    compileSdk = 35
+
+    defaultConfig {
+        applicationId = "{{ kmp_identifier }}"
+        minSdk = 24
+        targetSdk = 35
+        versionCode = 1
+        versionName = "0.1.0"
+    }
+}
+
+compose.desktop {
+    application {
+        mainClass = "{{ kmp_identifier }}.MainKt"
+        nativeDistributions {
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi)
+            packageName = "{{ project_name }}"
+            packageVersion = "0.1.0"
+        }
+    }
+}
