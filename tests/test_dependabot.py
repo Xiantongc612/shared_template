@@ -34,6 +34,7 @@ def test_rendered_dependabot_tracks_selected_components(render: Render) -> None:
     client = render("Client", {"components": ["client"]})
     hono = render("Hono", {"components": ["backend"], "backend_variants": ["hono"]})
     scripts = render("Scripts", {"components": ["scripts"]})
+    kmp = render("KMP", {"components": ["kmp"]})
     everything = render(
         "Everything",
         {
@@ -60,6 +61,10 @@ def test_rendered_dependabot_tracks_selected_components(render: Render) -> None:
     assert dependabot_entries(scripts) == {
         ("github-actions", "/"),
         ("uv", "/scripts"),
+    }
+    assert dependabot_entries(kmp) == {
+        ("github-actions", "/"),
+        ("gradle", "/kmp"),
     }
     assert dependabot_entries(everything) == {
         ("github-actions", "/"),

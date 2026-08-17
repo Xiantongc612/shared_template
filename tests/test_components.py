@@ -33,6 +33,26 @@ def test_generated_agents_only_describes_selected_components(render: Render) -> 
     assert "Hono Backend" not in instructions
 
 
+def test_kmp_generator_has_compose_targets_and_no_other_components(
+    render: Render,
+) -> None:
+    project = render("KMP", {"components": ["kmp"]})
+    kmp = project / "kmp"
+
+    assert (kmp / "settings.gradle.kts").is_file()
+    assert (kmp / "composeApp" / "build.gradle.kts").is_file()
+    assert (kmp / "composeApp" / "src" / "commonMain").is_dir()
+    assert (kmp / "composeApp" / "src" / "androidMain").is_dir()
+    assert (kmp / "composeApp" / "src" / "iosMain").is_dir()
+    assert (kmp / "composeApp" / "src" / "desktopMain").is_dir()
+    assert "Compose Multiplatform" in (project / "README.md").read_text()
+    assert "Kotlin Multiplatform" in (project / "AGENTS.md").read_text()
+    assert not (project / "frontend").exists()
+    assert not (project / "client").exists()
+    assert not (project / "backend").exists()
+    assert not (project / "scripts").exists()
+
+
 def test_react_integrations_are_independently_rendered(render: Render) -> None:
     project = render(
         "ReactAI",

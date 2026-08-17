@@ -55,6 +55,12 @@ from support import SHARED_FILES, WORKFLOW_FILES, Render
             {"Frontend:", "Tauri", "Hono", "FastAPI"},
         ),
         (
+            "KMP",
+            {"components": ["kmp"]},
+            {"Kotlin Multiplatform", "Compose Multiplatform application"},
+            {"Frontend:", "Tauri", "Hono", "FastAPI", "Python Scripts"},
+        ),
+        (
             "Backends",
             {
                 "components": ["backend"],
@@ -118,6 +124,8 @@ def test_render_matrix(
     expected_workflows = WORKFLOW_FILES.copy()
     if "cloudflare_project_id" in recorded_answers:
         expected_workflows.add("deploy.yml")
+    if "kmp" in recorded_answers["components"]:
+        expected_workflows.add("package-kmp.yml")
 
     assert SHARED_FILES <= {path.name for path in project.iterdir()}
     assert isinstance(

@@ -27,6 +27,7 @@ def test_cases_cover_minimal_and_all_compatible_integrations() -> None:
         "fastapi-integrations",
         "scripts",
         "scripts-integrations",
+        "kmp",
     ]
     assert [case.family for case in integration.CASE_LIST] == [
         "react",
@@ -41,6 +42,7 @@ def test_cases_cover_minimal_and_all_compatible_integrations() -> None:
         "fastapi",
         "scripts",
         "scripts",
+        "kmp",
     ]
     assert integration.CASES["react-integrations"].answers == {
         "frontend_playwright": True,
@@ -69,6 +71,7 @@ def test_cases_cover_minimal_and_all_compatible_integrations() -> None:
         "python_data_analysis": True,
         "python_duckdb": True,
     }
+    assert integration.CASES["kmp"].answers == {"components": ["kmp"]}
 
 
 def test_root_devbox_exposes_exact_focused_commands() -> None:

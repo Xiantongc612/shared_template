@@ -48,6 +48,7 @@ def test_generated_semgrep_is_component_aware(render) -> None:
         "Hono": {"components": ["backend"], "backend_variants": ["hono"]},
         "FastAPI": {"components": ["backend"], "backend_variants": ["fastapi"]},
         "Scripts": {"components": ["scripts"]},
+        "KMP": {"components": ["kmp"]},
         "Everything": {
             "components": ["frontend", "client", "backend"],
             "backend_variants": ["hono", "fastapi"],
@@ -64,6 +65,8 @@ def test_generated_semgrep_is_component_aware(render) -> None:
     assert "python-shell-injection" in rules["FastAPI"]
     assert "python-shell-injection" in rules["Scripts"]
     assert "python-eval-exec" in rules["Scripts"]
+    assert "kotlin-runtime-shell" in rules["KMP"]
+    assert "kotlin-insecure-tls" in rules["KMP"]
     assert "rust-shell-injection" in rules["Everything"]
     assert "python-shell-injection" in rules["Everything"]
 
@@ -73,6 +76,8 @@ def test_generated_semgrep_is_component_aware(render) -> None:
     assert "typescript-shell-injection" not in rules["FastAPI"]
     assert "typescript-shell-injection" not in rules["Scripts"]
     assert "rust-shell-injection" not in rules["Scripts"]
+    assert "kotlin-runtime-shell" not in rules["React"]
+    assert "kotlin-runtime-shell" not in rules["Scripts"]
 
 
 def test_generated_semgrep_rules_are_parseable(render) -> None:

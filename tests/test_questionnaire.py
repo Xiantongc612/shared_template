@@ -42,7 +42,7 @@ def test_default_render_has_only_react_runtime(render: Render) -> None:
         ({"project_name": "   "}, "Project name must not be empty."),
         (
             {"project_name": "Invalid", "components": []},
-            "Select at least one of Frontend, Client, Backend, or Python Scripts.",
+            "Select at least one of Frontend, Client, Backend, Python Scripts, or Kotlin Multiplatform.",
         ),
         (
             {
@@ -230,3 +230,27 @@ def test_scripts_toggles_are_gated_on_the_component(render: Render) -> None:
     assert scripts_answers["python_data_analysis"] is False
     assert scripts_answers["python_duckdb"] is False
     assert not (default / "scripts").exists()
+
+
+def test_kmp_component_records_identifier_and_is_independent(render: Render) -> None:
+    project = render(
+        "KMP",
+        {"components": ["kmp"], "kmp_identifier": "io.example.kmp"},
+    )
+    answers = yaml.safe_load((project / ".copier-answers.yml").read_text())
+
+    assert answers["components"] == ["kmp"]
+    assert answers["kmp_identifier"] == "io.example.kmp"
+    assert (project / "kmp").is_dir()
+    assert not (project / "frontend").exists()
+    assert not (project / "client").exists()
+    assert not (project / "backend").exists()
+    assert not (project / "scripts").exists()
+
+
+def test_unselected_kmp_omits_identifier_and_files(render: Render) -> None:
+    project = render("NoKMP")
+    answers = yaml.safe_load((project / ".copier-answers.yml").read_text())
+
+    assert "kmp_identifier" not in answers
+    assert not (project / "kmp").exists()

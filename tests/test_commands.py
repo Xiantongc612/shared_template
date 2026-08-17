@@ -85,6 +85,22 @@ def test_scripts_suppresses_astro_test_fallback(render: Render) -> None:
     assert "No unit tests configured" not in str(scripts)
 
 
+def test_kmp_commands_are_separate_and_suppress_astro_fallback(render: Render) -> None:
+    project = render(
+        "AstroKMP",
+        {"frontend_variant": "astro", "components": ["frontend", "kmp"]},
+    )
+    scripts = json.loads((project / "devbox.json").read_text())["shell"]["scripts"]
+
+    assert "gradle -p kmp ktlintFormat" in scripts["fmt"]
+    assert "gradle -p kmp ktlintCheck" in scripts["check"]
+    assert "gradle -p kmp compileKotlinDesktop" in scripts["check"]
+    assert "gradle -p kmp test" in scripts["test"]
+    assert "gradle -p kmp compileKotlinDesktop" in scripts["build"]
+    assert "No unit tests configured" not in str(scripts["test"])
+    assert not any("build" in command for command in scripts["check"])
+
+
 def test_repository_commands_enforce_uv_lock() -> None:
     scripts = json.loads((ROOT / "devbox.json").read_text())["shell"]["scripts"]
 
